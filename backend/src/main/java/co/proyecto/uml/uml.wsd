@@ -1,0 +1,128 @@
+@startuml
+' ========================
+' Enumeraciones
+' ========================
+enum Rol {
+  ADMINISTRADOR
+  OPERADOR
+}
+
+enum TipoUbicacion {
+  CIUDAD
+  REFUGIO
+  CENTRO_AYUDA
+}
+
+enum TipoRecurso {
+  ALIMENTO
+  MEDICINA
+  EQUIPO_RESCATE
+}
+
+enum EstadoEquipo {
+  DISPONIBLE
+  EN_MISION
+  DESCANSO
+}
+
+enum EstadoEvacuacion {
+  PENDIENTE
+  EN_PROCESO
+  COMPLETADA
+}
+
+' ========================
+' Clases principales
+' ========================
+abstract class Usuario {
+  - idUsuario : int
+  - nombre : String
+  - email : String
+  - contraseña : String
+  - rol : Rol
+  + login()
+  + logout()
+}
+
+class Administrador {
+  + gestionarRecursos()
+  + asignarRecursos()
+  + definirRutas()
+  + generarInforme()
+}
+
+class OperadorEmergencia {
+  + monitorearZonas()
+  + priorizarEvacuacion()
+  + coordinarRecursos()
+}
+
+class Ubicacion {
+  - idUbicacion : int
+  - nombre : String
+  - tipo : TipoUbicacion
+  - personasAfectadas : int
+  - nivelRiesgo : int
+  - recursosNecesarios : List<Recurso>
+  - recursosDisponibles : List<Recurso>
+}
+
+class Recurso {
+  - idRecurso : int
+  - tipo : TipoRecurso
+  - cantidad : int
+}
+
+class EquipoRescate {
+  - idEquipo : int
+  - tipo : String
+  - miembros : int
+  - estado : EstadoEquipo
+}
+
+class Ruta {
+  - idRuta : int
+  - distancia : double
+  - tiempoEstimado : double
+}
+
+class GrafoRutas {
+  - nodos : List<Ubicacion>
+  - aristas : List<Ruta>
+  + agregarUbicacion()
+  + agregarRuta()
+  + calcularCaminoCorto()
+  + visualizarMapa()
+}
+
+class Evacuacion {
+  - idEvacuacion : int
+  - personasEvacuadas : int
+  - prioridad : int
+  - estado : EstadoEvacuacion
+}
+
+class SimuladorTransporte {
+  + simularRuta()
+  + optimizarDistribucion()
+  + asignarRecursosEvacuacion()
+}
+
+' ========================
+' Relaciones
+' ========================
+Usuario <|-- Administrador
+Usuario <|-- OperadorEmergencia
+
+Ubicacion "1" *-- "*" Recurso
+Ubicacion "1" *-- "*" EquipoRescate
+Ubicacion "1" *-- "*" Evacuacion
+
+Ruta "1" o-- "1" Ubicacion : origen
+Ruta "1" o-- "1" Ubicacion : destino
+
+GrafoRutas "1" *-- "*" Ubicacion
+GrafoRutas "1" *-- "*" Ruta
+Evacuacion "1" --> "1" Ubicacion
+
+@enduml
