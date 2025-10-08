@@ -1,0 +1,59 @@
+{
+  "zonas": [
+    {
+      "id": 1,
+      "nombre": "Zona A - Llanos Orientales",
+      "tipo": "INUNDACION",
+      "nivelRiesgo": "ALTO",
+      "personasAfectadas": 320,
+      "lat": 4.15,
+      "lng": -73.63,
+      "recursosNecesarios": [
+        { "tipo": "AGUA", "cantidad": 200 },
+        { "tipo": "ALIMENTO", "cantidad": 150 }
+      ],
+      "updatedAt": "2025-10-08T14:00:00Z"
+    },
+    {
+      "id": 2,
+      "nombre": "Zona B - Costa Pacífica",
+      "tipo": "TERREMOTO",
+      "nivelRiesgo": "CRITICO",
+      "personasAfectadas": 900,
+      "lat": 2.45,
+      "lng": -77.52,
+      "recursosNecesarios": [
+        { "tipo": "MEDICINA", "cantidad": 400 },
+        { "tipo": "EQUIPO_RESCATE", "cantidad": 6 }
+      ],
+      "updatedAt": "2025-10-08T14:10:00Z"
+    },
+    {
+      "id": 3,
+      "nombre": "Zona C - Eje Cafetero",
+      "tipo": "DESLIZAMIENTO",
+      "nivelRiesgo": "MEDIO",
+      "personasAfectadas": 120,
+      "lat": 4.53,
+      "lng": -75.67,
+      "recursosNecesarios": [
+        { "tipo": "COMBUSTIBLE", "cantidad": 100 },
+        { "tipo": "EQUIPO_RESCATE", "cantidad": 3 }
+      ],
+      "updatedAt": "2025-10-08T14:20:00Z"
+    }
+  ],
+
+  "rutas": [
+    { "origen": 1, "destino": 2, "distancia": 320.5 },
+    { "origen": 2, "destino": 3, "distancia": 210.3 },
+    { "origen": 1, "destino": 3, "distancia": 270.0 }
+  ],
+
+  "recursos": [
+    { "id": 1, "nombre": "Agua potable", "tipo": "AGUA", "cantidad": 500, "disponible": true },
+    { "id": 2, "nombre": "Medicamentos básicos", "tipo": "MEDICINA", "cantidad": 250, "disponible": true },
+    { "id": 3, "nombre": "Equipos de rescate", "tipo": "EQUIPO_RESCATE", "cantidad": 10, "disponible": false },
+    { "id": 4, "nombre": "Combustible de emergencia", "tipo": "COMBUSTIBLE", "cantidad": 400, "disponible": true }
+  ]
+}
