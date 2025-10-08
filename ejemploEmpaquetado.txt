@@ -1,0 +1,152 @@
+PROYECTO: SISTEMA DE GESTIÓN DE DESASTRES NATURALES
+=========================================
+
+1. BACKEND – SPRING BOOT (Java + PostgreSQL + WebSocket)
+---------------------------------------------------------
+
+Estructura de carpetas recomendada:
+-----------------------------------
+com.uniquindio.gestiondesastres
+│
+├── controller/
+|   |    ├── RecursoController.java
+│   │    ├── ZonaController.java
+│   │    ├── SimulacionController.java
+│   │    └── WebSocketController.java
+├── service/
+├── model/                        # Entidades JPA
+│   │   │   │   ├── Recurso.java
+│   │   │   │   ├── Zona.java
+│   │   │   │   ├── Usuario.java
+│   │   │   │   ├── Ruta.java
+│   │   │   │   └── enums/
+│   │   │   │       ├── TipoRecurso.java
+│   │   │   │       ├── EstadoZona.java
+│   │   │   │       └── RolUsuario.java
+├── repository/
+├── websocket/
+├── dto/
+├── config/
+├── util/
+└── GestionDesastresApplication.java
+
+
+Descripción de cada paquete:
+-----------------------------
+
+1. controller/
+- Contiene los controladores REST (y WebSocket endpoints) que exponen las API al frontend.
+- Reciben peticiones HTTP desde Angular.
+- Llaman a los servicios para ejecutar la lógica.
+- Devuelven respuestas JSON.
+
+Ejemplo: RecursoController, ZonaController, RutaController, AuthController.
+
+Referencia: Spring Boot REST Controllers — Spring Boot Reference Guide (Spring.io)
+
+
+2. service/
+- Contiene la lógica de negocio.
+- Procesa la información, valida, calcula rutas, asigna recursos, etc.
+
+Ejemplo: RecursoService, RutaService, EvacuacionService.
+
+Ejemplo de función:
+public List<Ruta> calcularRutaMasCorta(Zona origen, Zona destino) {
+    // Aplica Dijkstra o consulta la API de Google Maps
+}
+
+
+3. repository/
+- Se comunica directamente con la base de datos PostgreSQL.
+- Consultar, guardar, eliminar y actualizar entidades.
+- Hereda de JpaRepository o CrudRepository.
+
+Ejemplo: RecursoRepository, ZonaRepository, UsuarioRepository.
+
+
+4. model/
+- Contiene las entidades del sistema, que representan tablas en la base de datos.
+- Ejemplo: Usuario, Recurso, ZonaAfectada, RutaTransporte, EquipoRescate.
+- Usa anotaciones: @Entity, @Table, @Id, @GeneratedValue
+
+
+5. dto/
+- Contiene los Data Transfer Objects, clases para enviar o recibir datos del frontend.
+- No siempre se envían entidades completas.
+- Ejemplo: AsignacionDTO, RutaSimulacionDTO, LoginRequest, ZonaEstadoDTO.
+
+
+6. websocket/
+- Define la comunicación en tiempo real entre el servidor y Angular.
+- Ejemplo: AlertasWebSocketHandler, SimulacionSocket.
+- Librería usada: org.springframework.web.socket
+Referencia: Spring WebSocket Documentation – spring.io
+
+
+7. config/
+- Contiene configuraciones del proyecto:
+  - Seguridad (Spring Security).
+  - CORS (para conectar Angular con el backend).
+  - WebSocket.
+
+Ejemplo: WebSocketConfig, SecurityConfig, CorsConfig.
+
+
+8. util/
+- Clases auxiliares con funciones generales (no pertenecen a un módulo específico).
+- Ejemplo: JsonUtils, MapParser, Dijkstra, BFS.
+
+
+2. FRONTEND – ANGULAR
+----------------------
+
+Estructura recomendada:
+-----------------------
+src/
+├── app/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   ├── models/
+│   ├── guards/
+│   ├── interceptors/
+│   ├── sockets/
+│   └── app.module.ts
+│
+├── assets/
+├── environments/
+└── index.html
+
+
+Descripción de cada carpeta:
+-----------------------------
+
+1. components/
+- Componentes visuales pequeños y reutilizables.
+- Ejemplo: mapa-interactivo.component.ts, tabla-zonas.component.ts, barra-progreso.component.ts.
+
+
+2. pages/
+- Contiene las páginas principales del sistema.
+- Ejemplo: inicio/, administracion/, rutas/, estadisticas/.
+
+
+3. services/
+- Se comunica con la API REST de Spring Boot.
+- Cada servicio llama a un endpoint distinto.
+
+Ejemplo:
+getRecursosDisponibles(): Observable<Recurso[]> {
+  return this.http.get<Recurso[]>(`${this.apiUrl}/recursos/disponibles`);
+}
+
+
+4. models/
+- Define las interfaces o clases TypeScript que representan los datos que vienen del backend.
+- Ejemplo: recurso.model.ts, zona.model.ts, usuario.model.ts.
+
+
+5. guards/
+- Controla la navegación y seguridad de rutas.
+- Ejemplo: auth.guard.ts

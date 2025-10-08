@@ -100,6 +100,7 @@ class Evacuacion {
   - personasEvacuadas : int
   - prioridad : int
   - estado : EstadoEvacuacion
+  - ubicacion : Ubicacion
 }
 
 class SimuladorTransporte {
@@ -116,7 +117,7 @@ Usuario <|-- OperadorEmergencia
 
 Ubicacion "1" *-- "*" Recurso
 Ubicacion "1" *-- "*" EquipoRescate
-Ubicacion "1" *-- "*" Evacuacion
+Ubicacion -- TipoUbicacion
 
 Ruta "1" o-- "1" Ubicacion : origen
 Ruta "1" o-- "1" Ubicacion : destino
@@ -124,5 +125,12 @@ Ruta "1" o-- "1" Ubicacion : destino
 GrafoRutas "1" *-- "*" Ubicacion
 GrafoRutas "1" *-- "*" Ruta
 Evacuacion "1" --> "1" Ubicacion
+
+Recurso -- TipoRecurso
+EquipoRescate -- EstadoEquipo
+Evacuacion -- EstadoEvacuacion
+Usuario -- Rol
+SimuladorTransporte "1" o-- "1" GrafoRutas
+
 
 @enduml
