@@ -150,3 +150,15 @@ getRecursosDisponibles(): Observable<Recurso[]> {
 5. guards/
 - Controla la navegación y seguridad de rutas.
 - Ejemplo: auth.guard.ts
+
+
+
+ADMIN:
+-Gestionde recursos y equipos de emergencia(Agregar Eliminar)
+-Asignacion de recursos a la zonas personasAfectadas-Definir rutas de trnasporte entre las ubicaiones 
+-Generar informe(Estado de zonas, recursos)
+OPERARIO:
+-Monitorear el estado de ubicaciones afectas
+-actualiza la situacion estado en tiempo real
+-Prioriza evacuacion segun urgencia
+-coordina la distribucin de os recursos entre las zonas afectadas

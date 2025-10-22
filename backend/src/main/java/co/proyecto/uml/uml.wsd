@@ -63,6 +63,7 @@ class Ubicacion {
   - tipo : TipoUbicacion
   - personasAfectadas : int
   - nivelRiesgo : int
+  -evacuacion : Evacuacion
   - recursosNecesarios : List<Recurso>
   - recursosDisponibles : List<Recurso>
 }
@@ -84,6 +85,8 @@ class Ruta {
   - idRuta : int
   - distancia : double
   - tiempoEstimado : double
+  -nodoOrigen : Ubicacion
+  -nodoDestino : Ubicacion
 }
 
 class GrafoRutas {
