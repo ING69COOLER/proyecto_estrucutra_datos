@@ -1,4 +1,6 @@
-package co.proyecto.model;
+package co.proyecto.logic;
+import co.proyecto.model.Ruta;
+import co.proyecto.model.Ubicacion;
 
 import java.util.List;
 
