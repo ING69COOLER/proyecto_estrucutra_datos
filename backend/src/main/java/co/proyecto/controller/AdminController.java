@@ -7,11 +7,9 @@ import java.util.Arrays;
 import java.util.Date;
 import org.springframework.web.bind.annotation.*;
 
-import co.proyecto.model.TipoUbicacion;
 import co.proyecto.repository.UbicacionRepository;
 import co.proyecto.repository.RecursoRepository;
 import co.proyecto.repository.RutaRepository;
-import co.proyecto.estructuras.ListaDobleSimple;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController

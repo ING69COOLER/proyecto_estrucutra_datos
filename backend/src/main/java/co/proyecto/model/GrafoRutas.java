@@ -1,15 +1,8 @@
 package co.proyecto.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import java.util.List;
 
-@Entity
 public class GrafoRutas {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idGrafo;
     private List<Ruta> rutas;
     private List<Ubicacion> ubicaciones;
