@@ -26,7 +26,7 @@ public class ProyectoEstrucutraDatosApplication {
 class InicioController {
     @GetMapping("/")
     public String inicio() {
-        return "forward:/mockup.html";
-    }
+		return "forward:/mockup.html";
+	}
 }
 
