@@ -26,10 +26,10 @@ public class Ubicacion {
     private Date updatedAt;
 
     // Cambia ListaDobleSimple por List<Recurso>
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "ubicacion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recurso> recursosNecesarios;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "ubicacion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recurso> recursosDisponibles;
 
     @OneToMany(mappedBy = "origen")
@@ -38,7 +38,8 @@ public class Ubicacion {
     @OneToMany(mappedBy = "destino")
     private List<Ruta> rutasDestino;
 
-    public Ubicacion() {}
+    public Ubicacion() {
+    }
 
     public int getId() {
         return id;
@@ -136,5 +137,4 @@ public class Ubicacion {
         this.rutasDestino = rutasDestino;
     }
 
-    
 }

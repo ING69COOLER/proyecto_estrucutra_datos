@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 public class Recurso {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -13,6 +14,12 @@ public class Recurso {
     private int cantidad;
     private boolean disponible = true;
 
+    // 🔹 Relación con Ubicacion (muchos recursos pertenecen a una ubicación)
+    @ManyToOne
+    @JoinColumn(name = "ubicacion_id") // crea la columna ubicacion_id en la tabla recurso
+    private Ubicacion ubicacion;
+
+    // --- Getters y Setters ---
     public int getId() {
         return id;
     }
@@ -51,5 +58,13 @@ public class Recurso {
 
     public void setDisponible(boolean disponible) {
         this.disponible = disponible;
+    }
+
+    public Ubicacion getUbicacion() {
+        return ubicacion;
+    }
+
+    public void setUbicacion(Ubicacion ubicacion) {
+        this.ubicacion = ubicacion;
     }
 }
