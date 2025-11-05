@@ -1,4 +1,5 @@
 package co.proyecto.model;
+import co.proyecto.model.enums.EstadoEvacuacion;
 
 import jakarta.persistence.*;
 

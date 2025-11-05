@@ -1,5 +1,5 @@
 package co.proyecto.model;
-
+import co.proyecto.model.enums.EstadoEquipo;
 import jakarta.persistence.*;
 
 @Entity

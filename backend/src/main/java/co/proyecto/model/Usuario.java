@@ -1,5 +1,7 @@
 package co.proyecto.model;
 
+import co.proyecto.model.enums.Rol;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -56,5 +58,4 @@ public abstract class Usuario {
         this.rol = rol;
     }
 
-   
 }

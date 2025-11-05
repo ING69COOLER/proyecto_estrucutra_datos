@@ -1,4 +1,4 @@
-package co.proyecto.model;
+package co.proyecto.model.enums;
 
 public enum EstadoEvacuacion {
     PENDIENTE,

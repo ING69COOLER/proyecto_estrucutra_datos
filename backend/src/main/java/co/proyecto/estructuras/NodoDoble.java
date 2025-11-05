@@ -1,4 +1,4 @@
-package co.structure;
+package co.proyecto.estructuras;
 public class NodoDoble<T> {
     private T dato;
     private NodoDoble<T> siguiente;
