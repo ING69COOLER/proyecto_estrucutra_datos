@@ -2,12 +2,13 @@ package co.proyecto.model;
 
 import jakarta.persistence.*;
 import java.util.List;
+import java.util.Date;
 
 @Entity
 public class Ubicacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idUbicacion;
+    private int id; // Cambiado de idUbicacion a id
 
     private String nombre;
 
@@ -15,20 +16,36 @@ public class Ubicacion {
     private TipoUbicacion tipo;
 
     private int personasAfectadas;
-    private int nivelRiesgo;
+    private String nivelRiesgo; // Cambia a String para coincidir con el frontend
 
-    @OneToMany
+    // NUEVOS CAMPOS para el mockup
+    private Double lat;
+    private Double lng;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updatedAt;
+
+    // Cambia ListaDobleSimple por List<Recurso>
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Recurso> recursosNecesarios;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Recurso> recursosDisponibles;
 
-    public int getIdUbicacion() {
-        return idUbicacion;
+    @OneToMany(mappedBy = "origen")
+    private List<Ruta> rutasOrigen;
+
+    @OneToMany(mappedBy = "destino")
+    private List<Ruta> rutasDestino;
+
+    public Ubicacion() {}
+
+    public int getId() {
+        return id;
     }
 
-    public void setIdUbicacion(int idUbicacion) {
-        this.idUbicacion = idUbicacion;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNombre() {
@@ -55,12 +72,36 @@ public class Ubicacion {
         this.personasAfectadas = personasAfectadas;
     }
 
-    public int getNivelRiesgo() {
+    public String getNivelRiesgo() {
         return nivelRiesgo;
     }
 
-    public void setNivelRiesgo(int nivelRiesgo) {
+    public void setNivelRiesgo(String nivelRiesgo) {
         this.nivelRiesgo = nivelRiesgo;
+    }
+
+    public Double getLat() {
+        return lat;
+    }
+
+    public void setLat(Double lat) {
+        this.lat = lat;
+    }
+
+    public Double getLng() {
+        return lng;
+    }
+
+    public void setLng(Double lng) {
+        this.lng = lng;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public List<Recurso> getRecursosNecesarios() {
@@ -77,6 +118,22 @@ public class Ubicacion {
 
     public void setRecursosDisponibles(List<Recurso> recursosDisponibles) {
         this.recursosDisponibles = recursosDisponibles;
+    }
+
+    public List<Ruta> getRutasOrigen() {
+        return rutasOrigen;
+    }
+
+    public void setRutasOrigen(List<Ruta> rutasOrigen) {
+        this.rutasOrigen = rutasOrigen;
+    }
+
+    public List<Ruta> getRutasDestino() {
+        return rutasDestino;
+    }
+
+    public void setRutasDestino(List<Ruta> rutasDestino) {
+        this.rutasDestino = rutasDestino;
     }
 
     

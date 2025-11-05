@@ -6,26 +6,34 @@ import jakarta.persistence.*;
 public class Recurso {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idRecurso;
+    private int id;
 
-    @Enumerated(EnumType.STRING)
-    private TipoRecurso tipo;
-
+    private String nombre;
+    private String tipo;
     private int cantidad;
+    private boolean disponible = true;
 
-    public int getIdRecurso() {
-        return idRecurso;
+    public int getId() {
+        return id;
     }
 
-    public void setIdRecurso(int idRecurso) {
-        this.idRecurso = idRecurso;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public TipoRecurso getTipo() {
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getTipo() {
         return tipo;
     }
 
-    public void setTipo(TipoRecurso tipo) {
+    public void setTipo(String tipo) {
         this.tipo = tipo;
     }
 
@@ -37,5 +45,11 @@ public class Recurso {
         this.cantidad = cantidad;
     }
 
-    
+    public boolean isDisponible() {
+        return disponible;
+    }
+
+    public void setDisponible(boolean disponible) {
+        this.disponible = disponible;
+    }
 }

@@ -6,39 +6,26 @@ import jakarta.persistence.*;
 public class Ruta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idRuta;
-
-    private double distancia;
-    private double tiempoEstimado;
+    private int id;
 
     @ManyToOne
-    private Ubicacion origen;
+    @JoinColumn(name = "origen_id", referencedColumnName = "id", nullable = false)
+    private Ubicacion origen;   // referencia a entidad Ubicacion
 
     @ManyToOne
-    private Ubicacion destino;
+    @JoinColumn(name = "destino_id", referencedColumnName = "id", nullable = false)
+    private Ubicacion destino;  // referencia a entidad Ubicacion
 
-    public int getIdRuta() {
-        return idRuta;
+    private double distancia; // en km
+
+    public Ruta() {} // Constructor vacío requerido por JPA
+
+    public int getId() {
+        return id;
     }
 
-    public void setIdRuta(int idRuta) {
-        this.idRuta = idRuta;
-    }
-
-    public double getDistancia() {
-        return distancia;
-    }
-
-    public void setDistancia(double distancia) {
-        this.distancia = distancia;
-    }
-
-    public double getTiempoEstimado() {
-        return tiempoEstimado;
-    }
-
-    public void setTiempoEstimado(double tiempoEstimado) {
-        this.tiempoEstimado = tiempoEstimado;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Ubicacion getOrigen() {
@@ -55,6 +42,14 @@ public class Ruta {
 
     public void setDestino(Ubicacion destino) {
         this.destino = destino;
+    }
+
+    public double getDistancia() {
+        return distancia;
+    }
+
+    public void setDistancia(double distancia) {
+        this.distancia = distancia;
     }
 
 }

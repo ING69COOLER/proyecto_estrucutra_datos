@@ -1,6 +1,9 @@
 package co.proyecto.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import java.util.List;
 
 @Entity
@@ -8,12 +11,13 @@ public class GrafoRutas {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idGrafo;
+    private List<Ruta> rutas;
+    private List<Ubicacion> ubicaciones;
 
-    @OneToMany
-    private List<Ubicacion> nodos;
-
-    @OneToMany
-    private List<Ruta> aristas;
+    public GrafoRutas(List<Ruta> rutas, List<Ubicacion> ubicaciones) {
+        this.rutas = rutas;
+        this.ubicaciones = ubicaciones;
+    }
 
     public int getIdGrafo() {
         return idGrafo;
@@ -23,21 +27,19 @@ public class GrafoRutas {
         this.idGrafo = idGrafo;
     }
 
-    public List<Ubicacion> getNodos() {
-        return nodos;
+    public List<Ruta> getRutas() {
+        return rutas;
     }
 
-    public void setNodos(List<Ubicacion> nodos) {
-        this.nodos = nodos;
+    public void setRutas(List<Ruta> rutas) {
+        this.rutas = rutas;
     }
 
-    public List<Ruta> getAristas() {
-        return aristas;
+    public List<Ubicacion> getUbicaciones() {
+        return ubicaciones;
     }
 
-    public void setAristas(List<Ruta> aristas) {
-        this.aristas = aristas;
+    public void setUbicaciones(List<Ubicacion> ubicaciones) {
+        this.ubicaciones = ubicaciones;
     }
-
-    
 }

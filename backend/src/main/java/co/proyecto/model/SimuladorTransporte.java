@@ -8,7 +8,6 @@ public class SimuladorTransporte {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idSimulador;
 
-    @OneToOne
     private GrafoRutas grafo;
 
     public int getIdSimulador() {

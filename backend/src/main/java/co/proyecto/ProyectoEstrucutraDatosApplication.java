@@ -1,5 +1,4 @@
-package co.proyecto.proyecto_estrucutra_datos;
-
+package co.proyecto;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
@@ -18,6 +17,6 @@ public class ProyectoEstrucutraDatosApplication {
 class InicioController {
 	@GetMapping("/")
 	public String inicio() {
-		return "inicio";
+		return "forward:/mockup.html";
 	}
 }
