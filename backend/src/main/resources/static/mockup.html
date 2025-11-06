@@ -65,6 +65,7 @@
     }
   </style>
 </head>
+
 <body>
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -270,9 +271,6 @@
                 <select id="u_tipo" class="form-select form-select-sm">
                   <option value="URBANA">Urbana</option>
                   <option value="RURAL">Rural</option>
-                  <option value="COSTERA">Costera</option>
-                  <option value="MONTAÑOSA">Montañosa</option>
-                  <option value="INDUSTRIAL">Industrial</option>
                 </select>
               </div>
               <div class="col-md-2">
@@ -283,6 +281,15 @@
                 <label class="form-label">Lng</label>
                 <input id="u_lng" type="number" step="0.0001" class="form-control form-control-sm"
                   placeholder="-74.05" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Nivel de Riesgo</label>
+                <select id="u_nivelRiesgo" class="form-select form-select-sm">
+                  <option value="BAJO">Bajo</option>
+                  <option value="MEDIO">Medio</option>
+                  <option value="ALTO">Alto</option>
+                  <option value="CRITICO">Crítico</option>
+                </select>
               </div>
               <div class="col-12 d-grid">
                 <button class="btn btn-success btn-sm mt-2" type="submit">Crear Ubicación</button>
@@ -314,8 +321,9 @@
                   <tr>
                     <th>Nombre</th>
                     <th>Tipo</th>
-                    <th>longitud</th>
-                    <th>latitud</th>
+                    <th>Longitud</th>
+                    <th>Latitud</th>
+                    <th>Nivel de Riesgo</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -656,40 +664,67 @@
     });
     //mierda para crear Ubicación
     document.getElementById("form-create-ubicacion").addEventListener("submit", (event) => {
-      event.preventDefault();
+    event.preventDefault();
 
-      var nombre = document.getElementById("u_nombre").value;
-      var tipo = document.getElementById("u_tipo").value;
-      var lat = document.getElementById("u_lat").value;
-      var lng = document.getElementById("u_lng").value;
+    const ubicacion = {
+        nombre: document.getElementById("u_nombre").value,
+        tipo: document.getElementById("u_tipo").value, // Ahora solo enviará RURAL o URBANA
+        lat: parseFloat(document.getElementById("u_lat").value),
+        lng: parseFloat(document.getElementById("u_lng").value),
+        nivelRiesgo: document.getElementById("u_nivelRiesgo").value,
+        personasAfectadas: 0
+    };
 
-      fetch(apiBase + '/zonas', {
+    console.log('Enviando ubicación:', ubicacion);
+
+    fetch(apiBase + '/zonas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, tipo, lat, lng })
-      })
-
-      loadUbicaciones();
+        body: JSON.stringify(ubicacion)
     })
+    .then(response => response.json())
+    .then(data => {
+        addLog('Ubicación creada: ' + data.nombre);
+        loadUbicaciones();
+        Swal.fire({
+            title: 'Éxito',
+            text: 'Ubicación creada correctamente',
+            icon: 'success'
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'Error al crear la ubicación: ' + error.message,
+            icon: 'error'
+        });
+    });
+});
     //mierda para cargar Ubicaciones
 
     function loadUbicaciones() {
-      fetch(apiBase + '/zonas')//cambiar
+    fetch('http://localhost:8081/api/zonas')
         .then(r => r.json())
-        .then(list => {
-          const tbody = document.querySelector('#tabla-ubicaciones tbody');//cambiar
-          tbody.innerHTML = '';
-          let total = 0;
-          list.forEach(r => {
-            total += r.cantidad || 0;
-            const tr = document.createElement('tr');
-            //<th>Nombre</th><th>Tipo</th><th>longitud</th><th>latitud</th>
-            tr.innerHTML = `<td>${r.nombre}</td><td>${r.tipo}</td><td>${r.lng}</td><td>${r.lat}</td>`;
-            tbody.appendChild(tr);
-          });
+        .then(ubicaciones => {
+            const tbody = document.querySelector('#tabla-ubicaciones tbody');
+            tbody.innerHTML = '';
+            ubicaciones.forEach(u => {
+                tbody.innerHTML += `
+                  <tr>
+                    <td>${u.nombre}</td>
+                    <td>${u.tipo}</td>
+                    <td>${u.nivelRiesgo}</td>
+                    <td>${u.lat}, ${u.lng}</td>
+                  </tr>
+                `;
+            });
         })
-        .catch(e => console.warn('No se pudo cargar recursos', e));
-    }
+        .catch(e => console.error('Error cargando ubicaciones:', e));
+}
+
+document.addEventListener('DOMContentLoaded', loadUbicaciones);
+
 
 
     // mierda para crear Ruta
@@ -743,36 +778,30 @@
 
     document.querySelector('#tabla-zonas tbody').addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-id]');
-      if (!btn) return; // si no es un botón de los que queremos, salir
-      console.log(btn.dataset.id);
-      e.preventDefault();
+      if (!btn) return;
       const id = btn.dataset.id;
-      console.log(id);
-      fetch(`/${id}`)
-        .then(response => { mostrarUbicacion(response)
-        })
+      fetch(apiBase + '/zonas/' + id)
+        .then(r => r.json())
+        .then(ubicacion => { mostrarUbicacion(ubicacion); })
         .catch(err => console.error('Error al obtener ubicación:', err));
     });
 
     function mostrarUbicacion(ubicacion) {
-      console.log(ubicacion.nombre);
-    Swal.fire({
-      title: 'Ubicación encontrada',
-      html: `
-        <b>ID:</b> ${ubicacion.id}<br>
-        <b>Nombre:</b> ${ubicacion.nombre}<br>
-        <b>Latitud:</b> ${ubicacion.latitud}<br>
-        <b>Longitud:</b> ${ubicacion.longitud}<br>
-        <b>Nivel de riesgo:</b>${ubicacion.nivelRiesgo}<br>
-        <b>Nivel de zonas afectadas:</b>${ubicacion.personasAfectadas}<br>
-        <b>Nivel de zonas fecha:</b>${ubicacion.updatedAt}<br>
-      `,
-      icon: 'success',
-      confirmButtonText: 'OK'
-  });
-    
-
-}
+      Swal.fire({
+        title: 'Ubicación encontrada',
+        html: `
+          <b>ID:</b> ${ubicacion.id}<br>
+          <b>Nombre:</b> ${ubicacion.nombre}<br>
+          <b>Latitud:</b> ${ubicacion.lat}<br>
+          <b>Longitud:</b> ${ubicacion.lng}<br>
+          <b>Nivel de riesgo:</b> ${ubicacion.nivelRiesgo}<br>
+          <b>Nivel de zonas afectadas:</b> ${ubicacion.personasAfectadas}<br>
+          <b>Nivel de zonas fecha:</b> ${ubicacion.updatedAt}<br>
+        `,
+        icon: 'success',
+        confirmButtonText: 'OK'
+      });
+    }
 
 
 
@@ -841,6 +870,24 @@
       })
     }
 
+    function validarUbicacion(ubicacion) {
+    const tiposValidos = ['URBANA', 'RURAL']; // SOLO estos valores
+    const nivelesRiesgo = ['BAJO', 'MEDIO', 'ALTO', 'CRITICO'];
+    
+    if (!tiposValidos.includes(ubicacion.tipo)) {
+        throw new Error('Tipo de ubicación no válido');
+    }
+    
+    if (!nivelesRiesgo.includes(ubicacion.nivelRiesgo)) {
+        throw new Error('Nivel de riesgo no válido');
+    }
+    
+    if (!ubicacion.nombre || ubicacion.nombre.trim() === '') {
+        throw new Error('El nombre es requerido');
+    }
+    
+    return true;
+}
   </script>
 </body>
 
