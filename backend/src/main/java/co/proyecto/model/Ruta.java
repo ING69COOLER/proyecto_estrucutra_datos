@@ -1,9 +1,11 @@
 package co.proyecto.model;
 
+import co.proyecto.logic.Arista;
+import co.proyecto.logic.Nodo;
 import jakarta.persistence.*;
 
 @Entity
-public class Ruta {
+public class Ruta <T extends Comparable> implements Arista<T> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -19,6 +21,12 @@ public class Ruta {
     private double distancia; // en km
 
     public Ruta() {} // Constructor vacío requerido por JPA
+
+    public Ruta(Nodo<T> I, Nodo<T> F, double distancia){
+        origen = (Ubicacion) I.getValor();
+        destino = (Ubicacion) F.getValor();
+        this.distancia = distancia;
+    }
 
     public int getId() {
         return id;
@@ -50,6 +58,31 @@ public class Ruta {
 
     public void setDistancia(double distancia) {
         this.distancia = distancia;
+    }
+
+    @Override
+    public void setCola(Nodo<T> cola) {
+        this.destino = (Ubicacion)cola.getValor();
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setCola'");
+    }
+
+    @Override
+    public void setCabeza(Nodo<T> cabeza) {
+        this.origen = (Ubicacion)cabeza.getValor();
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setCabeza'");
+    }
+
+    @Override
+    public Nodo<T> getCola() {
+        return new Nodo<T>((T)destino);
+    }
+
+    @Override
+    public Nodo<T> getCabeza() {
+        // TODO Auto-generated method stub
+        return new Nodo<T>((T)origen);
     }
 
 }

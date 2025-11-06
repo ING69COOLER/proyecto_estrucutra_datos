@@ -1,0 +1,23 @@
+se runea con "http://localhost:8081/mockup.html"
+
+hay un docker compose que parmite levantar un docker para conectar con la base de datos de postgre, 
+si no se tiene configurada una propia o para pruebas, para usarse toca crear el docker y levantarlo,
+mediante: 
+
+-> docker compose up -d
+
+si ya se creo el docker y se apago, se vuelve a enceder con:
+
+-> docker start <contenedor>
+
+y si se quiere apagarlos
+
+-> docker stop <contenedor>
+
+(oviamente para ver los contenedores se usa docker ps)
+
+
+
+
+
+

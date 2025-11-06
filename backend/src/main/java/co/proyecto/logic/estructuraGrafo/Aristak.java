@@ -1,6 +1,6 @@
 package co.proyecto.logic;
 
-public class Arista <T extends Comparable> {
+public class Aristak <T extends Comparable> implements Arista{
     private Nodo<T> cola;
     private Nodo<T> cabeza;
     private double distancia;
