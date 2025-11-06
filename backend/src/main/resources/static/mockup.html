@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,18 +15,54 @@
   <!-- Font Awesome (íconos) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+
   <style>
     /* Estilos básicos para layout */
-    body { background:#f8f9fa; }
-    #map { height: 600px; min-height: 400px; width: 100%; border-radius: 6px; }
-    .sidebar { max-height: 85vh; overflow-y: auto; }
-    .tab-section { display: none; }
-    .tab-section.active { display: block; }
-    .small-muted { font-size: 0.85rem; color: #6c757d; }
-    .card-map { height: 100%; }
-    .badge-risk-low { background:#198754; }
-    .badge-risk-medium { background:#ffc107; color:#000; }
-    .badge-risk-high { background:#dc3545; }
+    body {
+      background: #f8f9fa;
+    }
+
+    #map {
+      height: 600px;
+      min-height: 400px;
+      width: 100%;
+      border-radius: 6px;
+    }
+
+    .sidebar {
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .tab-section {
+      display: none;
+    }
+
+    .tab-section.active {
+      display: block;
+    }
+
+    .small-muted {
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+
+    .card-map {
+      height: 100%;
+    }
+
+    .badge-risk-low {
+      background: #198754;
+    }
+
+    .badge-risk-medium {
+      background: #ffc107;
+      color: #000;
+    }
+
+    .badge-risk-high {
+      background: #dc3545;
+    }
   </style>
 </head>
 <body>
@@ -37,7 +74,8 @@
         <span id="wsStatus" class="badge bg-secondary me-2">WS: desconectado</span>
         <button class="btn btn-outline-light btn-sm me-2" id="btn-refresh">Refrescar datos</button>
         <div class="dropdown">
-          <a class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+          <a class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+            aria-expanded="false">
             <i class="fa fa-user"></i> Cuenta
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
@@ -64,7 +102,8 @@
             <a href="#" class="list-group-item list-group-item-action" data-tab="mapa">Mapa Interactivo</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="simulador">Simulador</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
-            <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">Salir (apagar demo)</a>
+            <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">Salir (apagar
+              demo)</a>
           </div>
 
           <hr>
@@ -185,7 +224,7 @@
                   </div>
                   <div class="mb-2">
                     <label class="form-label">Cantidad</label>
-                    <input id="r_cantidad" type="number" class="form-control form-control-sm" value="1"/>
+                    <input id="r_cantidad" type="number" class="form-control form-control-sm" value="1" />
                   </div>
                   <div class="d-grid">
                     <button class="btn btn-success btn-sm" type="submit">Crear Recurso</button>
@@ -198,7 +237,7 @@
                 <form id="form-create-team">
                   <div class="mb-2">
                     <label class="form-label">Nombre</label>
-                    <input id="e_nombre" class="form-control form-control-sm"/>
+                    <input id="e_nombre" class="form-control form-control-sm" />
                   </div>
                   <div class="mb-2">
                     <label class="form-label">Tipo</label>
@@ -211,7 +250,7 @@
                   </div>
                   <div class="mb-2">
                     <label class="form-label">Miembros</label>
-                    <input id="e_miembros" type="number" value="5" class="form-control form-control-sm"/>
+                    <input id="e_miembros" type="number" value="5" class="form-control form-control-sm" />
                   </div>
                   <div class="d-grid">
                     <button class="btn btn-primary btn-sm" id="btn-create-team" type="button">Crear Equipo</button>
@@ -219,6 +258,37 @@
                 </form>
               </div>
             </div>
+            <hr>
+            <h6>Registrar Ubicación</h6>
+            <form id="form-create-ubicacion" class="row g-2">
+              <div class="col-md-4">
+                <label class="form-label">Nombre</label>
+                <input id="u_nombre" required class="form-control form-control-sm" placeholder="Ej: Zona Norte" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Tipo</label>
+                <select id="u_tipo" class="form-select form-select-sm">
+                  <option value="URBANA">Urbana</option>
+                  <option value="RURAL">Rural</option>
+                  <option value="COSTERA">Costera</option>
+                  <option value="MONTAÑOSA">Montañosa</option>
+                  <option value="INDUSTRIAL">Industrial</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Lat</label>
+                <input id="u_lat" type="number" step="0.0001" class="form-control form-control-sm" placeholder="4.65" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Lng</label>
+                <input id="u_lng" type="number" step="0.0001" class="form-control form-control-sm"
+                  placeholder="-74.05" />
+              </div>
+              <div class="col-12 d-grid">
+                <button class="btn btn-success btn-sm mt-2" type="submit">Crear Ubicación</button>
+              </div>
+            </form>
+
 
             <hr>
 
@@ -227,7 +297,25 @@
               <table class="table table-sm" id="tabla-recursos">
                 <thead>
                   <tr>
-                    <th>Nombre</th><th>Tipo</th><th>Cantidad</th><th>Disponibilidad</th><th>Acciones</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Disponibilidad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <h6 class="mt-3">Listado de Ubicaciones</h6>
+            <div class="table-responsive">
+              <table class="table table-sm" id="tabla-ubicaciones">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>longitud</th>
+                    <th>latitud</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -248,11 +336,11 @@
                 <h6>Calcular ruta más corta</h6>
                 <form id="form-calc-route">
                   <div class="mb-2">
-                    <label class="form-label">Origen (id o coordenadas)</label>
+                    <label class="form-label">Origen (coordenadas o Nombre conocido)</label>
                     <input id="route_origen" class="form-control form-control-sm" />
                   </div>
                   <div class="mb-2">
-                    <label class="form-label">Destino (id o coordenadas)</label>
+                    <label class="form-label">Destino (Coordenadas o Nombre conocido)</label>
                     <input id="route_destino" class="form-control form-control-sm" />
                   </div>
                   <div class="mb-2">
@@ -270,22 +358,27 @@
               </div>
 
               <div class="col-md-6">
-                <h6>Definir nueva ruta (arista)</h6>
+                <h6>Definir nueva ruta</h6>
                 <form id="form-create-route">
                   <div class="mb-2">
                     <label class="form-label">Origen (zona id)</label>
-                    <input id="r_origen" class="form-control form-control-sm"/>
+                    <input id="r_origen" class="form-control form-control-sm" type="text" />
                   </div>
                   <div class="mb-2">
                     <label class="form-label">Destino (zona id)</label>
-                    <input id="r_destino" class="form-control form-control-sm"/>
+                    <input id="r_destino" class="form-control form-control-sm" type="text" />
                   </div>
                   <div class="mb-2">
                     <label class="form-label">Distancia (km)</label>
-                    <input id="r_distancia" type="number" step="0.1" class="form-control form-control-sm"/>
+                    <input id="r_distancia" type="number" step="0.1" class="form-control form-control-sm" />
                   </div>
                   <div class="d-grid">
-                    <button class="btn btn-success btn-sm" id="btn-create-route" type="button">Crear Ruta</button>
+                    <button class="btn btn-success btn-sm" id="btn-create-route-name" type="submit">Crear ruta por
+                      nombre</button>
+                  </div>
+                  <div class="d-grid">
+                    <button class="btn btn-success btn-sm" id="btn-create-route-coordenadas" type="submit">Crear ruta
+                      por coordenadas</button>
                   </div>
                 </form>
               </div>
@@ -295,7 +388,14 @@
             <h6>Grafo de rutas (lista)</h6>
             <div class="table-responsive">
               <table class="table table-sm" id="tabla-rutas">
-                <thead><tr><th>Origen</th><th>Destino</th><th>Distancia</th><th>Acciones</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Distancia</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -307,7 +407,8 @@
         <section id="estadisticas" class="tab-section">
           <div class="card p-3">
             <h5>Estadísticas y Reportes</h5>
-            <p class="small-muted">Gráficas del avance de las evacuaciones, distribución de recursos y tiempos de llegada.</p>
+            <p class="small-muted">Gráficas del avance de las evacuaciones, distribución de recursos y tiempos de
+              llegada.</p>
 
             <div class="row">
               <div class="col-md-6">
@@ -332,7 +433,8 @@
         <section id="mapa" class="tab-section">
           <div class="card p-3">
             <h5>Mapa Interactivo</h5>
-            <p class="small-muted">Visualiza zonas, rutas y zonas de evacuación. Pincha una zona para ver detalles y acciones.</p>
+            <p class="small-muted">Visualiza zonas, rutas y zonas de evacuación. Pincha una zona para ver detalles y
+              acciones.</p>
 
             <div id="map" class="mb-3"></div>
 
@@ -373,7 +475,8 @@
         <section id="simulador" class="tab-section">
           <div class="card p-3">
             <h5>Simulador de Evacuación y Transporte</h5>
-            <p class="small-muted">Ejecuta simulaciones paso a paso, controla velocidad y observa asignación de recursos y rutas.</p>
+            <p class="small-muted">Ejecuta simulaciones paso a paso, controla velocidad y observa asignación de recursos
+              y rutas.</p>
 
             <div class="row g-3">
               <div class="col-md-4">
@@ -384,7 +487,7 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label">Velocidad (ms paso)</label>
-                <input id="sim_speed" type="range" min="100" max="2000" step="100" value="500" class="form-range"/>
+                <input id="sim_speed" type="range" min="100" max="2000" step="100" value="500" class="form-range" />
               </div>
               <div class="col-md-4">
                 <label class="form-label">&nbsp;</label>
@@ -406,10 +509,11 @@
         <section id="carga-datos" class="tab-section">
           <div class="card p-3">
             <h5>Carga de datos iniciales</h5>
-            <p class="small-muted">Sube un archivo JSON con zonas, rutas y recursos, o pulsa el botón para cargar datos de prueba.</p>
+            <p class="small-muted">Sube un archivo JSON con zonas, rutas y recursos, o pulsa el botón para cargar datos
+              de prueba.</p>
 
             <div class="mb-3">
-              <input type="file" id="fileLoad" accept=".json" class="form-control form-control-sm"/>
+              <input type="file" id="fileLoad" accept=".json" class="form-control form-control-sm" />
             </div>
             <div class="d-flex gap-2">
               <button id="btn-load-file" class="btn btn-primary btn-sm">Cargar archivo</button>
@@ -437,14 +541,14 @@
           <div class="modal-body">
             <div class="mb-2">
               <label class="form-label">Correo</label>
-              <input id="login_email" required class="form-control form-control-sm" type="email"/>
+              <input id="login_email" required class="form-control form-control-sm" type="email" />
             </div>
             <div class="mb-2">
               <label class="form-label">Contraseña</label>
-              <input id="login_password" required class="form-control form-control-sm" type="password"/>
+              <input id="login_password" required class="form-control form-control-sm" type="password" />
             </div>
             <div class="form-check">
-              <input id="login_remember" class="form-check-input" type="checkbox"/>
+              <input id="login_remember" class="form-check-input" type="checkbox" />
               <label class="form-check-label">Recordarme</label>
             </div>
           </div>
@@ -461,6 +565,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
   <!-- STOMP + SockJS para WebSocket -->
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.7.5/dist/sockjs.min.js"></script>
@@ -478,10 +584,10 @@
     const wsBase = document.getElementById('wsUrl').textContent;
 
     // Navegación de pestañas
-    document.querySelectorAll('.list-group .list-group-item').forEach(a=>{
-      a.addEventListener('click', (e)=>{
+    document.querySelectorAll('.list-group .list-group-item').forEach(a => {
+      a.addEventListener('click', (e) => {
         e.preventDefault();
-        document.querySelectorAll('.list-group .list-group-item').forEach(x=>x.classList.remove('active'));
+        document.querySelectorAll('.list-group .list-group-item').forEach(x => x.classList.remove('active'));
         a.classList.add('active');
         const tab = a.getAttribute('data-tab');
         document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
@@ -502,7 +608,7 @@
     // WebSocket STOMP client (plantilla)
     let stompClient = null;
     function connectWebSocket() {
-      const socket = new SockJS(wsBase.replace('ws://','') /* Si usas ws://localhost:8080/ws con SockJS el URL debe ser http://.../ws; adapta en producción */);
+      const socket = new SockJS(wsBase.replace('ws://', '') /* Si usas ws://localhost:8080/ws con SockJS el URL debe ser http://.../ws; adapta en producción */);
       // Nota: en deploy ajustar correctamente a 'http(s)://host/ws'
       stompClient = StompJs.Stomp.over(socket);
       stompClient.connect({}, function (frame) {
@@ -514,7 +620,7 @@
           addLog('Evacuación recibida: ' + payload.ubicacion);
           // Actualiza UI: tabla, mapas, etc.
         });
-      }, function(err) {
+      }, function (err) {
         console.error('STOMP error', err);
         document.getElementById('wsStatus').textContent = 'WS: error';
       });
@@ -530,7 +636,7 @@
     }
 
     // Form acciones: crear recurso (ejemplo)
-    document.getElementById('form-create-resource').addEventListener('submit', (e)=>{
+    document.getElementById('form-create-resource').addEventListener('submit', (e) => {
       e.preventDefault();
       const nombre = document.getElementById('r_nombre').value;
       const tipo = document.getElementById('r_tipo').value;
@@ -538,50 +644,151 @@
       // Llamada REST (fetch) - endpoint /recursos
       fetch(apiBase + '/recursos', {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, tipo, cantidad })
       })
-      .then(r=>r.json())
-      .then(data=>{
-        addLog('Recurso creado: ' + data.nombre);
-        loadRecursos(); // refresca tabla
-      })
-      .catch(err=>{console.error(err); addLog('Error creando recurso')});
+        .then(r => r.json())
+        .then(data => {
+          addLog('Recurso creado: ' + data.nombre);
+          loadRecursos(); // refresca tabla
+        })
+        .catch(err => { console.error(err); addLog('Error creando recurso') });
     });
+    //mierda para crear Ubicación
+    document.getElementById("form-create-ubicacion").addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      var nombre = document.getElementById("u_nombre").value;
+      var tipo = document.getElementById("u_tipo").value;
+      var lat = document.getElementById("u_lat").value;
+      var lng = document.getElementById("u_lng").value;
+
+      fetch(apiBase + '/zonas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, tipo, lat, lng })
+      })
+
+      loadUbicaciones();
+    })
+    //mierda para cargar Ubicaciones
+
+    function loadUbicaciones() {
+      fetch(apiBase + '/zonas')//cambiar
+        .then(r => r.json())
+        .then(list => {
+          const tbody = document.querySelector('#tabla-ubicaciones tbody');//cambiar
+          tbody.innerHTML = '';
+          let total = 0;
+          list.forEach(r => {
+            total += r.cantidad || 0;
+            const tr = document.createElement('tr');
+            //<th>Nombre</th><th>Tipo</th><th>longitud</th><th>latitud</th>
+            tr.innerHTML = `<td>${r.nombre}</td><td>${r.tipo}</td><td>${r.lng}</td><td>${r.lat}</td>`;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(e => console.warn('No se pudo cargar recursos', e));
+    }
+
+
+    // mierda para crear Ruta
+    document.getElementById("form-create-route").addEventListener('submit', (event) => {
+      e.preventDefault();
+
+      var origen = document.getElementById("r_origen").value;
+      var destino = document.getElementById("r_destino").value;
+      var distancia = document.getElementById("r_distancia").value;
+
+      if (document.activeElement.id === "btn-btn-create-route-name") {
+
+        // enviar al backend
+        fetch(apiBase + '/rutas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origen, destino, distancia })
+        })
+
+      } else if (document.activeElement.id === "btn-btn-create-route-coordenadas") {
+
+        //enviar al backend
+        fetch(apiBase + '/rutas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origen, destino, distancia })
+        })
+      }
+
+    })
 
     // Cargar recursos (ejemplo)
-    function loadRecursos(){
+    function loadRecursos() {
       fetch(apiBase + '/recursos')
-        .then(r=>r.json())
-        .then(list=>{
+        .then(r => r.json())
+        .then(list => {
           const tbody = document.querySelector('#tabla-recursos tbody');
           tbody.innerHTML = '';
           let total = 0;
-          list.forEach(r=>{
+          list.forEach(r => {
             total += r.cantidad || 0;
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${r.nombre}</td><td>${r.tipo}</td><td>${r.cantidad}</td><td>${r.disponible? 'Sí':'No'}</td>
-                            <td><button class="btn btn-sm btn-outline-primary" data-id="${r.id}">Asignar</button></td>`;
+            tr.innerHTML = `<td>${r.nombre}</td><td>${r.tipo}</td><td>${r.cantidad}</td><td>${r.disponible ? 'Sí' : 'No'}</td>
+                            <td><button class="btn btn-sm btn-outline-primary" data-id="${r.id} >Asignar</button></td>`;
             tbody.appendChild(tr);
           });
           document.getElementById('totalResources').textContent = total;
         })
-        .catch(e=>console.warn('No se pudo cargar recursos', e));
+        .catch(e => console.warn('No se pudo cargar recursos', e));
     }
+
+    document.querySelector('#tabla-zonas tbody').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-id]');
+      if (!btn) return; // si no es un botón de los que queremos, salir
+      console.log(btn.dataset.id);
+      e.preventDefault();
+      const id = btn.dataset.id;
+      console.log(id);
+      fetch(`/${id}`)
+        .then(response => { mostrarUbicacion(response)
+        })
+        .catch(err => console.error('Error al obtener ubicación:', err));
+    });
+
+    function mostrarUbicacion(ubicacion) {
+      console.log(ubicacion.nombre);
+    Swal.fire({
+      title: 'Ubicación encontrada',
+      html: `
+        <b>ID:</b> ${ubicacion.id}<br>
+        <b>Nombre:</b> ${ubicacion.nombre}<br>
+        <b>Latitud:</b> ${ubicacion.latitud}<br>
+        <b>Longitud:</b> ${ubicacion.longitud}<br>
+        <b>Nivel de riesgo:</b>${ubicacion.nivelRiesgo}<br>
+        <b>Nivel de zonas afectadas:</b>${ubicacion.personasAfectadas}<br>
+        <b>Nivel de zonas fecha:</b>${ubicacion.updatedAt}<br>
+      `,
+      icon: 'success',
+      confirmButtonText: 'OK'
+  });
+    
+
+}
+
+
 
     // Cargar zonas (ejemplo)
     function loadZonas() {
       fetch(apiBase + '/zonas')
-        .then(r=>r.json())
-        .then(list=>{
+        .then(r => r.json())
+        .then(list => {
           const tbody = document.querySelector('#tabla-zonas tbody');
           tbody.innerHTML = '';
           zonasLayer.clearLayers();
-          list.forEach(z=>{
+          list.forEach(z => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${z.nombre}</td>
                             <td>${z.tipo}</td>
-                            <td><span class="badge ${z.nivelRiesgo==='CRITICO' ? 'badge-risk-high' : z.nivelRiesgo==='ALTO' ? 'badge-risk-high' : z.nivelRiesgo==='MEDIO' ? 'badge-risk-medium' : 'badge-risk-low'}">${z.nivelRiesgo}</span></td>
+                            <td><span class="badge ${z.nivelRiesgo === 'CRITICO' ? 'badge-risk-high' : z.nivelRiesgo === 'ALTO' ? 'badge-risk-high' : z.nivelRiesgo === 'MEDIO' ? 'badge-risk-medium' : 'badge-risk-low'}">${z.nivelRiesgo}</span></td>
                             <td>${z.personasAfectadas}</td>
                             <td>${z.recursosNecesarios?.length || 0}</td>
                             <td>${new Date(z.updatedAt || Date.now()).toLocaleString()}</td>
@@ -589,47 +796,52 @@
             tbody.appendChild(tr);
 
             // Añadir marcador al mapa (si tiene coordenadas)
-            if(z.lat && z.lng) {
-              const m = L.circleMarker([z.lat, z.lng], { radius:8 })
+            if (z.lat && z.lng) {
+              const m = L.circleMarker([z.lat, z.lng], { radius: 8 })
                 .bindPopup(`<strong>${z.nombre}</strong><br/>Riesgo: ${z.nivelRiesgo}<br/>Personas: ${z.personasAfectadas}`);
-              m.on('click', ()=> {
+              m.on('click', () => {
                 document.getElementById('dz_nombre').textContent = z.nombre;
                 document.getElementById('dz_riesgo').textContent = z.nivelRiesgo;
                 document.getElementById('dz_personas').textContent = z.personasAfectadas;
-                document.getElementById('dz_recursos').textContent = (z.recursosNecesarios||[]).map(rr=>rr.tipo).join(', ');
+                document.getElementById('dz_recursos').textContent = (z.recursosNecesarios || []).map(rr => rr.tipo).join(', ');
               });
               zonasLayer.addLayer(m);
             }
           });
         })
-        .catch(e=>console.warn('No se pudo cargar zonas', e));
+        .catch(e => console.warn('No se pudo cargar zonas', e));
     }
 
     // Inicialización
     window.addEventListener('load', () => {
       // Si tu WebSocket requiere URL distinta (http vs ws), adapta connectWebSocket()
-      try { connectWebSocket(); } catch(e){ console.warn('WS init error', e); }
+      try { connectWebSocket(); } catch (e) { console.warn('WS init error', e); }
       loadRecursos();
       loadZonas();
 
       // Hook botones de carga
-      document.getElementById('btn-load-sample').addEventListener('click', ()=> {
-        fetch(apiBase + '/admin/cargar-muestra', { method:'POST' })
-          .then(()=> { addLog('Datos de muestra cargados'); loadZonas(); loadRecursos(); })
-          .catch(()=> addLog('Error cargando datos de muestra'));
+      document.getElementById('btn-load-sample').addEventListener('click', () => {
+        fetch(apiBase + '/admin/cargar-muestra', { method: 'POST' })
+          .then(() => { addLog('Datos de muestra cargados'); loadZonas(); loadRecursos(); })
+          .catch(() => addLog('Error cargando datos de muestra'));
       });
 
-      document.getElementById('btn-refresh').addEventListener('click', ()=>{
+      document.getElementById('btn-refresh').addEventListener('click', () => {
         loadRecursos(); loadZonas();
         addLog('Datos refrescados manualmente');
       });
     });
 
-    function mostrarGrafoTerm(){
-      fetch(apiBase + '/zonas').then(r=>r.json()).
+    function mostrarGrafoTerm() {
+      // aca se sacan las rutas
+      let listaRutas = fetch(apiBase + '/rutas').then(r => r.json());
+
+      listaRutas.forEach(r => {
+        console.log(r.origen.nombre + "->" + r.destino.nombre);
+      })
     }
 
   </script>
 </body>
-</html>
 
+</html>

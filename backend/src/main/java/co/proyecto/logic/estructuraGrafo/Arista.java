@@ -1,5 +1,5 @@
-package co.proyecto.logic;
-
+package co.proyecto.logic.estructuraGrafo;
+// es la interface que usa el grafo
 public interface Arista <T extends Comparable> {
     // esta es la estructura que debe de cumplir la arista
 

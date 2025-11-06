@@ -1,8 +1,10 @@
-package co.proyecto.logic;
+package co.proyecto.logic.estructuraGrafo;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import co.proyecto.model.Ruta;
 
 public class Grafo <T extends Comparable>{
     //composicion
@@ -29,7 +31,7 @@ public class Grafo <T extends Comparable>{
             Nodo<T> nodoI = encontrarNodo(valorI);
             Nodo<T> nodoF = encontrarNodo(valorF);
             if (nodoF != null && nodoI != null) {
-            Arista arista = new Arista<>(nodoI,nodoF, distancia);
+            Arista arista = new Ruta<>(nodoI,nodoF, distancia);
             aristas.add(arista);
             actualizarMatrizAdyacencia();
         }
@@ -129,5 +131,25 @@ public class Grafo <T extends Comparable>{
             }
             System.out.println();
         }
+    }
+
+    public LinkedList<Nodo> getNodos() {
+        return nodos;
+    }
+
+    public LinkedList<Arista> getAristas() {
+        return aristas;
+    }
+
+    public double[][] getMatrizAdyacencia() {
+        return matrizAdyacencia;
+    }
+
+    public double[][] getCaminoCortoWarshall() {
+        return caminoCortoWarshall;
+    }
+
+    public int[][] getRecorridoCortoWarshall() {
+        return recorridoCortoWarshall;
     }
 }

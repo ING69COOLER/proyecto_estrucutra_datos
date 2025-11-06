@@ -2,6 +2,8 @@ package co.proyecto.controller;
 
 import co.proyecto.model.Ruta;
 import co.proyecto.repository.RutaRepository;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -10,6 +12,8 @@ import java.util.List;
 public class RutaController {
 
     private final RutaRepository rutaRepository;
+
+    
 
     public RutaController(RutaRepository rutaRepository) {
         this.rutaRepository = rutaRepository;

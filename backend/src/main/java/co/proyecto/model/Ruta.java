@@ -1,7 +1,7 @@
 package co.proyecto.model;
 
-import co.proyecto.logic.Arista;
-import co.proyecto.logic.Nodo;
+import co.proyecto.logic.estructuraGrafo.Arista;
+import co.proyecto.logic.estructuraGrafo.Nodo;
 import jakarta.persistence.*;
 
 @Entity

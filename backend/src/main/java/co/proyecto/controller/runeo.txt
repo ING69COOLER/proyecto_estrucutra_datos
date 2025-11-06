@@ -16,6 +16,24 @@ y si se quiere apagarlos
 
 (oviamente para ver los contenedores se usa docker ps)
 
+si no tiene descargado el docker en windows, descarguelo con: 
+
+winget --version
+
+para poder ver si tiene winget
+
+winget install --id Docker.DockerDesktop -e
+
+para descargar docker
+
+docker --version
+docker compose version
+
+para verificar
+
+
+//no usar el actual (openGographe)
+
 
 
 

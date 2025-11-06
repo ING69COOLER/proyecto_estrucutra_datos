@@ -1,19 +1,21 @@
-package co.proyecto.logic;
-
-public class Aristak <T extends Comparable> implements Arista{
+package co.proyecto.logic.estructuraGrafo;
+// clase previa, (es como una muestra)
+public class Aristak <T extends Comparable> implements Arista<T>{
     private Nodo<T> cola;
     private Nodo<T> cabeza;
     private double distancia;
 
-    public Arista(Nodo<T> I, Nodo<T> F, double distancia){
+    public Aristak(Nodo<T> I, Nodo<T> F, double distancia){
         cabeza = I;
         cola = F;
         this.distancia = distancia;
     }
 
+    @Override
     public void setCola(Nodo<T> cola) {
         this.cola = cola;
     }
+    @Override
     public void setCabeza(Nodo<T> cabeza) {
         this.cabeza = cabeza;
     }

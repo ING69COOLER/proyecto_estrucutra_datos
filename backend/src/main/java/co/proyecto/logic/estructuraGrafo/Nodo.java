@@ -1,4 +1,4 @@
-package co.proyecto.logic;
+package co.proyecto.logic.estructuraGrafo;
 
 public class Nodo <T extends Comparable> {
     private T valor;

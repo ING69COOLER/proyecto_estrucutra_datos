@@ -1,6 +1,6 @@
 package co.proyecto.model;
 
-import co.proyecto.logic.GrafoRutas;
+//import co.proyecto.logic.estructuraGrafo.GrafoRutas;
 import jakarta.persistence.*;
 
 @Entity
@@ -8,8 +8,8 @@ public class SimuladorTransporte {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idSimulador;
-    @Transient
-    private GrafoRutas grafo;
+    //@Transient
+    //private GrafoRutas grafo;
 
     public int getIdSimulador() {
         return idSimulador;
@@ -19,13 +19,13 @@ public class SimuladorTransporte {
         this.idSimulador = idSimulador;
     }
 
-    public GrafoRutas getGrafo() {
-        return grafo;
-    }
+    //public GrafoRutas getGrafo() {
+        //return grafo;
+    //}
 
-    public void setGrafo(GrafoRutas grafo) {
-        this.grafo = grafo;
-    }
+    //public void setGrafo(GrafoRutas grafo) {
+        //this.grafo = grafo;
+    //}
 
     
 }

@@ -4,6 +4,9 @@ import co.proyecto.model.Recurso;
 import co.proyecto.repository.RecursoRepository;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/recursos")
@@ -24,6 +27,8 @@ public class RecursoController {
     public Recurso create(@RequestBody Recurso recurso) {
         return recursoRepository.save(recurso);
     }
+
+   
 
     // ...puedes agregar PUT, DELETE, etc. según lo necesite el frontend...
 }
