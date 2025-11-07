@@ -662,45 +662,48 @@
         })
         .catch(err => { console.error(err); addLog('Error creando recurso') });
     });
-    //mierda para crear Ubicación
-    document.getElementById("form-create-ubicacion").addEventListener("submit", (event) => {
-    event.preventDefault();
 
-    const ubicacion = {
-        nombre: document.getElementById("u_nombre").value,
-        tipo: document.getElementById("u_tipo").value, // Ahora solo enviará RURAL o URBANA
-        lat: parseFloat(document.getElementById("u_lat").value),
-        lng: parseFloat(document.getElementById("u_lng").value),
-        nivelRiesgo: document.getElementById("u_nivelRiesgo").value,
-        personasAfectadas: 0
-    };
+    
+   document.getElementById("form-create-ubicacion").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-    console.log('Enviando ubicación:', ubicacion);
+  const ubicacion = {
+    nombre: document.getElementById("u_nombre").value,
+    tipo: document.getElementById("u_tipo").value,
+    lat: parseFloat(document.getElementById("u_lat").value),
+    lng: parseFloat(document.getElementById("u_lng").value),
+    nivelRiesgo: document.getElementById("u_nivelRiesgo").value,
+    personasAfectadas: 0
+  };
 
-    fetch(apiBase + '/zonas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ubicacion)
-    })
-    .then(response => response.json())
-    .then(data => {
-        addLog('Ubicación creada: ' + data.nombre);
-        loadUbicaciones();
-        Swal.fire({
-            title: 'Éxito',
-            text: 'Ubicación creada correctamente',
-            icon: 'success'
-        });
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            title: 'Error',
-            text: 'Error al crear la ubicación: ' + error.message,
-            icon: 'error'
-        });
+  console.log('Enviando ubicación:', ubicacion);
+
+  try {
+    const res = await fetch(apiBase + '/zonas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ubicacion)
     });
+
+    const msg = await res.text();
+
+    if (res.status === 409) {
+      Swal.fire('Duplicado', msg, 'warning');
+    } else if (!res.ok) {
+      Swal.fire('Error', 'No se pudo guardar la ubicación', 'error');
+    } else {
+      const data = JSON.parse(msg);
+      addLog('Ubicación creada: ' + data.nombre);
+      loadUbicaciones();
+      Swal.fire('Éxito', 'Ubicación creada correctamente', 'success');
+    }
+
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire('Error', 'Error al crear la ubicación: ' + error.message, 'error');
+  }
 });
+
     //mierda para cargar Ubicaciones
 
     function loadUbicaciones() {
@@ -709,13 +712,15 @@
         .then(ubicaciones => {
             const tbody = document.querySelector('#tabla-ubicaciones tbody');
             tbody.innerHTML = '';
+            // se van agregando filas por cada ubicacion existente
             ubicaciones.forEach(u => {
                 tbody.innerHTML += `
                   <tr>
                     <td>${u.nombre}</td>
                     <td>${u.tipo}</td>
+                    <td>${u.lng}</td>
+                    <td>${u.lat}</td>
                     <td>${u.nivelRiesgo}</td>
-                    <td>${u.lat}, ${u.lng}</td>
                   </tr>
                 `;
             });

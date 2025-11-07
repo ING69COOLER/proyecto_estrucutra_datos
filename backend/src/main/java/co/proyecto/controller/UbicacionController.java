@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/zonas")
-@CrossOrigin(origins = "*")
 public class UbicacionController {
 
     private final UbicacionRepository ubicacionRepository;
@@ -29,26 +28,35 @@ public class UbicacionController {
         }
     }
 
-    //guarda una ubicacion
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Ubicacion ubicacion) {
-        try {
-            System.out.println("Datos recibidos: " + ubicacion);
-            
-            // Validaciones
-            if (ubicacion.getNombre() == null || ubicacion.getNombre().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("El nombre es requerido");
+    try {
+        System.out.println("Datos recibidos: " + ubicacion);
+
+        // Validación de campos obligatorios
+        if (ubicacion.getNombre() == null || ubicacion.getNombre().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("El nombre es requerido");
+        }
+
+        ubicacion.setUpdatedAt(new java.util.Date());
+
+        // Validación de duplicados
+            boolean existeDuplicado =
+                !ubicacionRepository.findByNombreAndLatAndLng(ubicacion.getNombre(), ubicacion.getLat(), ubicacion.getLng()).isEmpty() ||
+                !ubicacionRepository.findByLatAndLng(ubicacion.getLat(), ubicacion.getLng()).isEmpty() ||
+                !ubicacionRepository.findByNombre(ubicacion.getNombre()).isEmpty();
+
+            if (existeDuplicado) {
+                return ResponseEntity.status(409).body("Ya existe una ubicación con esos datos");
             }
 
-            ubicacion.setUpdatedAt(new java.util.Date());
-            
-            // Intentar guardar
+        // Guardar
             Ubicacion savedUbicacion = ubicacionRepository.save(ubicacion);
             System.out.println("Ubicación guardada correctamente: " + savedUbicacion);
-            
+
             return ResponseEntity.ok(savedUbicacion);
+
         } catch (Exception e) {
-            System.err.println("Error al guardar ubicación: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Error al guardar: " + e.getMessage());
         }
