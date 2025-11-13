@@ -1,8 +1,15 @@
 package co.proyecto.model;
 
 import co.proyecto.model.enums.Rol;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -13,7 +20,9 @@ public abstract class Usuario {
 
     private String nombre;
     private String email;
-    private String contraseña;
+
+    @Column(name = "contrasena")
+    private String contrasena;
 
     @Enumerated(EnumType.STRING)
     private Rol rol;
@@ -42,12 +51,12 @@ public abstract class Usuario {
         this.email = email;
     }
 
-    public String getContraseña() {
-        return contraseña;
+    public String getContrasena() {
+        return contrasena;
     }
 
-    public void setContraseña(String contraseña) {
-        this.contraseña = contraseña;
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
     }
 
     public Rol getRol() {
