@@ -27,8 +27,9 @@ public class AdminController {
         this.rutaRepository = rutaRepository;
     }
 
-    @PostMapping("/cargar-muestra")
-    public void cargarMuestra() {
+    
+    @GetMapping("/cargar-muestra")
+    public String cargarMuestra() {
         // Limpia datos previos
         ubicacionRepository.deleteAll();
         recursoRepository.deleteAll();
@@ -65,11 +66,15 @@ public class AdminController {
 
         // Ruta de muestra
         Ruta ruta = new Ruta();
+        Ruta ruta2 = new Ruta();
         Ubicacion origen = ubicacionRepository.findById(z1.getId()).orElse(null);
         Ubicacion destino = ubicacionRepository.findById(z2.getId()).orElse(null);
         ruta.setOrigen(origen);
         ruta.setDestino(destino);
         ruta.setDistancia(12.5);
         rutaRepository.save(ruta);
+
+        // puedes devolver un mensaje simple
+        return "Datos de muestra cargados correctamente";
     }
 }

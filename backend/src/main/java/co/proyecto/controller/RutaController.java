@@ -19,11 +19,12 @@ public class RutaController {
         this.rutaRepository = rutaRepository;
     }
 
-    @GetMapping
+     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST})
     public List<Ruta> getAll() {
         return rutaRepository.findAll();
     }
 
+   
     @PostMapping
     public Ruta create(@RequestBody Ruta ruta) {
         return rutaRepository.save(ruta);
