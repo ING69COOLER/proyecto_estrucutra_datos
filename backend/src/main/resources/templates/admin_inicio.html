@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel del Administrador</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 2rem; }
+    header { margin-bottom: 1.5rem; }
+    .actions { margin-top: 1.5rem; }
+    .actions a { display: inline-block; margin-right: 1rem; color: #007acc; text-decoration: none; }
+    .userinfo { margin-top: 0.5rem; color: #333; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bienvenido Administrador</h1>
+    <p>Este es el panel principal del administrador.</p>
+    <p class="userinfo">Usuario: <span th:text="${usuario.nombre}">Nombre</span></p>
+  </header>
+
+  <main>
+    <div class="actions">
+      <a th:href="@{/api/admin/cargar-muestra}" href="/api/admin/cargar-muestra">Cargar datos de muestra</a>
+      <a th:href="@{/logout}" href="/logout">Cerrar sesión</a>
+    </div>
+  </main>
+</body>
+</html>

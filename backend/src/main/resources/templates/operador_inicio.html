@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel del Operador</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 2rem; }
+    header { margin-bottom: 1.5rem; }
+    .actions { margin-top: 1.5rem; }
+    .actions a { display: inline-block; margin-right: 1rem; color: #007acc; text-decoration: none; }
+    .userinfo { margin-top: 0.5rem; color: #333; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bienvenido Operador</h1>
+    <p>Acceso permitido solo a la búsqueda de rutas.</p>
+    <p class="userinfo">Usuario: <span th:text="${usuario.nombre}">Nombre</span></p>
+  </header>
+
+  <main>
+    <div class="actions">
+      <a th:href="@{/operador/buscar-ruta}" href="/operador/buscar-ruta">Buscar rutas</a>
+      <a th:href="@{/logout}" href="/logout">Cerrar sesión</a>
+    </div>
+  </main>
+</body>
+</html>
