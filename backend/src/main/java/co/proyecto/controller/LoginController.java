@@ -49,13 +49,11 @@ public class LoginController {
         session.setAttribute("usuarioEmail", usuario.getEmail());
         session.setAttribute("usuarioRol", usuario.getRol().toString());
 
-         logger.info("Usuario autenticado: {} (ID: {}, Rol: {})", 
-                    usuario.getNombre(), usuario.getId(), usuario.getRol());
-        
+        logger.info("Usuario autenticado: {} (ID: {}, Rol: {})",
+                usuario.getNombre(), usuario.getId(), usuario.getRol());
 
-            return "redirect:/mockup";
+        return "redirect:/mockup";
     }
-
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
@@ -69,30 +67,60 @@ public class LoginController {
     }
 
     @PostMapping("/registro")
-    public String procesarRegistro(@RequestParam String nombre,
-                                   @RequestParam String email,
-                                   @RequestParam String contrasena,
-                                   @RequestParam(name = "rol", required = false) String rolStr,
-                                   RedirectAttributes redirectAttributes) {
-        
-        if (rolStr == null || rolStr.isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Seleccione un rol.");
-            return "redirect:/registro";
+public String procesarRegistro(@RequestParam String nombre,
+                               @RequestParam String email,
+                               @RequestParam String contrasena,
+                               @RequestParam(name = "rol", required = false) String rolStr,
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) {
+
+    if (rolStr == null || rolStr.isBlank()) {
+        redirectAttributes.addFlashAttribute("error", "Seleccione un rol.");
+        return "redirect:/registro";
+    }
+
+    try {
+        // 1. Convertimos el rol del form al enum
+        Rol rol = Rol.valueOf(rolStr);
+
+        // 2. Registramos el usuario
+        usuarioService.registrarUsuario(nombre, email, contrasena, rol);
+        logger.info("Usuario registrado: {} ({}, rol={})", nombre, email, rol);
+
+        // 3. Auto-login: usamos el mismo servicio de login
+        Optional<Usuario> usuarioOpt = usuarioService.login(email, contrasena);
+
+        if (usuarioOpt.isEmpty()) {
+            // Algo raro pasó: lo registramos pero no lo encontramos para login
+            redirectAttributes.addFlashAttribute("mensaje",
+                    "Usuario registrado correctamente. Inicia sesión con tus credenciales.");
+            return "redirect:/login";
         }
 
-        try {
-            Rol rol = Rol.valueOf(rolStr);
-            usuarioService.registrarUsuario(nombre, email, contrasena, rol);
-            redirectAttributes.addFlashAttribute("mensaje", "Usuario registrado correctamente. Ya puedes iniciar sesión.");
-            return "redirect:/login";
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", "Rol inválido o datos incorrectos: " + e.getMessage());
-            return "redirect:/registro";
-        } catch (Exception e) {
-            logger.error("Error al registrar usuario", e);
-            redirectAttributes.addFlashAttribute("error", "Error al registrar usuario: " + e.getMessage());
-            return "redirect:/registro";
-        }
+        Usuario usuario = usuarioOpt.get();
+
+        // 4. Guardar usuario en sesión igual que en el login normal
+        session.setAttribute("usuarioLogueado", usuario);
+        session.setAttribute("usuarioId", usuario.getId());
+        session.setAttribute("usuarioNombre", usuario.getNombre());
+        session.setAttribute("usuarioEmail", usuario.getEmail());
+        session.setAttribute("usuarioRol", usuario.getRol().toString());
+
+        logger.info("Usuario logueado automáticamente tras registro: {} (ID: {}, Rol: {})",
+                usuario.getNombre(), usuario.getId(), usuario.getRol());
+
+        // 5. Redirigir a /mockup -> MockupController decide admin/operador
+        return "redirect:/mockup";
+
+    } catch (IllegalArgumentException e) {
+        redirectAttributes.addFlashAttribute("error", "Rol inválido o datos incorrectos: " + e.getMessage());
+        return "redirect:/registro";
+    } catch (Exception e) {
+        logger.error("Error al registrar usuario", e);
+        redirectAttributes.addFlashAttribute("error", "Error al registrar usuario: " + e.getMessage());
+        return "redirect:/registro";
     }
+}
+
 
 }
