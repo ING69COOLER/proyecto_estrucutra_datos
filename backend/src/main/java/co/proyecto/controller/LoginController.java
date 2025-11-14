@@ -2,8 +2,6 @@ package co.proyecto.controller;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,18 +42,20 @@ public class LoginController {
         }
 
         Usuario usuario = usuarioOpt.get();
+
         session.setAttribute("usuarioLogueado", usuario);
+        session.setAttribute("usuarioId", usuario.getId());
+        session.setAttribute("usuarioNombre", usuario.getNombre());
+        session.setAttribute("usuarioEmail", usuario.getEmail());
+        session.setAttribute("usuarioRol", usuario.getRol().toString());
 
-        if (usuario.getRol() == Rol.ADMINISTRADOR) {
-            return "redirect:/admin/inicio";
-        }
+         logger.info("Usuario autenticado: {} (ID: {}, Rol: {})", 
+                    usuario.getNombre(), usuario.getId(), usuario.getRol());
+        
 
-        if (usuario.getRol() == Rol.OPERADOR) {
-            return "redirect:/operador/inicio";
-        }
-
-        return "login";
+            return "redirect:/mockup";
     }
+
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
