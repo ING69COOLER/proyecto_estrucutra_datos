@@ -1,5 +1,7 @@
 package co.proyecto.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -8,28 +10,43 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class MockupController {
 
+    private static final Logger logger = LoggerFactory.getLogger(MockupController.class);
+
     @GetMapping("/mockup")
     public String mostrarMockup(HttpSession session) {
-        // Verificamos que haya alguien logueado
+
+        // 1. Verificamos que haya sesión
         Object usuarioObj = session.getAttribute("usuarioLogueado");
         if (usuarioObj == null) {
-            System.out.println(">>> /mockup: no hay usuario en sesión, redirigiendo a /login");
+            logger.info("Acceso a /mockup SIN sesión, redirigiendo a /login");
             return "redirect:/login";
         }
 
-        // Rol guardado en sesión por el LoginController
-        String rol = (String) session.getAttribute("usuarioRol");
-        System.out.println(">>> /mockup: usuarioLogueado en sesión, rol = " + rol);
+        // 2. Leemos los datos que tú mismo guardaste en el LoginController
+        Long usuarioId = (Long) session.getAttribute("usuarioId");
+        String usuarioNombre = (String) session.getAttribute("usuarioNombre");
+        String usuarioEmail = (String) session.getAttribute("usuarioEmail");
+        String usuarioRol = (String) session.getAttribute("usuarioRol");
 
-        if ("ADMINISTRADOR".equals(rol)) {
-            System.out.println(">>> /mockup: vista ADMIN -> mockup_admin.html");
+        // 3. Log bonito para saber quién entró al mockup
+        logger.info(
+            "Acceso a /mockup -> Usuario: {} (email: {}, id: {}, rol: {})",
+            usuarioNombre,
+            usuarioEmail,
+            usuarioId,
+            usuarioRol
+        );
+
+        // 4. Elegir qué mockup ver según el rol
+        if ("ADMINISTRADOR".equals(usuarioRol)) {
+            logger.info("Mostrando MOCKUP ADMIN para usuario id={}", usuarioId);
             return "forward:/mockup_admin.html";
         }
 
-        // Cualquier otro rol (OPERADOR, null, etc.) va al mockup de operador
-        System.out.println(">>> /mockup: vista OPERADOR -> mockup_operador.html");
+        logger.info("Mostrando MOCKUP OPERADOR para usuario id={}", usuarioId);
         return "forward:/mockup_operador.html";
     }
 }
+
 
 
