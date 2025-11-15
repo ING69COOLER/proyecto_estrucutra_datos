@@ -4,20 +4,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sistema Gestión de Desastres Naturales — UI</title>
+  <title>Sistema Gestión de Desastres Naturales — ADMIN</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Leaflet CSS (mapa open-source). Si prefieres Google Maps, quita Leaflet y agrega la librería de Google Maps con tu API key -->
+  <!-- Leaflet CSS (mapa open-source) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <!-- Font Awesome (íconos) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-
   <style>
-    /* Estilos básicos para layout */
     body {
       background: #f8f9fa;
     }
@@ -70,10 +68,19 @@
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">SGD - Gestión Desastres</a>
+      <a class="navbar-brand" href="#">SGD - Gestión Desastres (Admin)</a>
+
       <div class="d-flex align-items-center">
+        <!-- Estado WebSocket -->
         <span id="wsStatus" class="badge bg-secondary me-2">WS: desconectado</span>
+
+        <!-- 👇 NUEVO: usuario actual -->
+        <span id="currentUser" class="text-light small me-3"></span>
+
+        <!-- Botón refrescar -->
         <button class="btn btn-outline-light btn-sm me-2" id="btn-refresh">Refrescar datos</button>
+
+        <!-- Menú de cuenta -->
         <div class="dropdown">
           <a class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
             aria-expanded="false">
@@ -91,7 +98,7 @@
   <div class="container-fluid mt-3">
     <div class="row">
 
-      <!-- SIDEBAR (navegación de pestañas) -->
+      <!-- SIDEBAR -->
       <aside class="col-md-3">
         <div class="card sidebar p-2">
           <h5 class="mb-2">Menú</h5>
@@ -103,8 +110,9 @@
             <a href="#" class="list-group-item list-group-item-action" data-tab="mapa">Mapa Interactivo</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="simulador">Simulador</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
-            <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">Salir (apagar
-              demo)</a>
+            <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">
+              Salir (apagar demo)
+            </a>
           </div>
 
           <hr>
@@ -116,14 +124,15 @@
 
       <!-- CONTENIDO PRINCIPAL -->
       <main class="col-md-9">
-        <!-- SECCION: INICIO -->
+        <!-- INICIO -->
         <section id="inicio" class="tab-section active">
           <div class="row g-3">
             <div class="col-lg-8">
               <div class="card card-map p-3">
                 <h5>Vista general</h5>
                 <p class="small-muted mb-2">Resumen de zonas afectadas y recursos disponibles.</p>
-                <!-- Indicadores rápidos -->
+
+                <!-- Indicadores -->
                 <div class="row mb-3">
                   <div class="col-sm-4">
                     <div class="card p-2">
@@ -145,7 +154,7 @@
                   </div>
                 </div>
 
-                <!-- Tabla resumen de zonas -->
+                <!-- Tabla zonas -->
                 <div>
                   <h6>Zonas afectadas</h6>
                   <div class="table-responsive">
@@ -162,7 +171,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <!-- Se rellenará dinámicamente -->
+                        <!-- Se rellena dinámicamente -->
                       </tbody>
                     </table>
                   </div>
@@ -171,12 +180,12 @@
               </div>
             </div>
 
-            <!-- PANEL DERECHO: Eventos y registro -->
+            <!-- Panel derecho -->
             <div class="col-lg-4">
               <div class="card p-2 mb-3">
                 <h6>Actividad reciente</h6>
                 <ul id="logActivity" class="list-group list-group-flush small" style="max-height:280px; overflow:auto;">
-                  <!-- Mensajes WebSocket o acciones -->
+                  <!-- Logs -->
                 </ul>
               </div>
 
@@ -199,7 +208,7 @@
           </div>
         </section>
 
-        <!-- SECCION: PANEL ADMIN -->
+        <!-- PANEL ADMIN -->
         <section id="panel-admin" class="tab-section">
           <div class="card p-3">
             <h5>Panel de Administración</h5>
@@ -259,7 +268,9 @@
                 </form>
               </div>
             </div>
+
             <hr>
+
             <h6>Registrar Ubicación</h6>
             <form id="form-create-ubicacion" class="row g-2">
               <div class="col-md-4">
@@ -279,8 +290,7 @@
               </div>
               <div class="col-md-2">
                 <label class="form-label">Lng</label>
-                <input id="u_lng" type="number" step="0.0001" class="form-control form-control-sm"
-                  placeholder="-74.05" />
+                <input id="u_lng" type="number" step="0.0001" class="form-control form-control-sm" placeholder="-74.05" />
               </div>
               <div class="col-md-4">
                 <label class="form-label">Nivel de Riesgo</label>
@@ -295,7 +305,6 @@
                 <button class="btn btn-success btn-sm mt-2" type="submit">Crear Ubicación</button>
               </div>
             </form>
-
 
             <hr>
 
@@ -314,6 +323,7 @@
                 <tbody></tbody>
               </table>
             </div>
+
             <h6 class="mt-3">Listado de Ubicaciones</h6>
             <div class="table-responsive">
               <table class="table table-sm" id="tabla-ubicaciones">
@@ -333,7 +343,7 @@
           </div>
         </section>
 
-        <!-- SECCION: PANEL RUTAS -->
+        <!-- PANEL RUTAS -->
         <section id="panel-rutas" class="tab-section">
           <div class="card p-3">
             <h5>Panel de Rutas y Planificación</h5>
@@ -411,7 +421,7 @@
           </div>
         </section>
 
-        <!-- SECCION: ESTADISTICAS -->
+        <!-- ESTADÍSTICAS -->
         <section id="estadisticas" class="tab-section">
           <div class="card p-3">
             <h5>Estadísticas y Reportes</h5>
@@ -437,7 +447,7 @@
           </div>
         </section>
 
-        <!-- SECCION: MAPA -->
+        <!-- MAPA -->
         <section id="mapa" class="tab-section">
           <div class="card p-3">
             <h5>Mapa Interactivo</h5>
@@ -479,7 +489,7 @@
           </div>
         </section>
 
-        <!-- SECCION: SIMULADOR -->
+        <!-- SIMULADOR -->
         <section id="simulador" class="tab-section">
           <div class="card p-3">
             <h5>Simulador de Evacuación y Transporte</h5>
@@ -513,7 +523,7 @@
           </div>
         </section>
 
-        <!-- SECCION: CARGA DE DATOS / PRUEBA -->
+        <!-- CARGA DE DATOS -->
         <section id="carga-datos" class="tab-section">
           <div class="card p-3">
             <h5>Carga de datos iniciales</h5>
@@ -537,7 +547,7 @@
     </div>
   </div>
 
-  <!-- MODAL: LOGIN (se usa para autenticación) -->
+  <!-- MODAL LOGIN (si lo usas después) -->
   <div class="modal fade" id="modalLogin" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -569,54 +579,50 @@
     </div>
   </div>
 
-  <!-- SCRIPTS: Librerías -->
+  <!-- SCRIPTS: librerías -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-  <!-- STOMP + SockJS para WebSocket -->
+  <!-- STOMP + SockJS -->
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.7.5/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
-   <!-- JS: lógica mínima para interacción (placeholder) -->
+  <!-- JS principal -->
   <script>
-    /* ================
-       Cliente UI - lógica mínima (plantilla)
-       - Aquí debes conectar con tu backend (REST) y WebSocket
-       - Está intencionalmente funcional para demo local, completa según tu API
-       ================ */
-
     const apiBase = document.getElementById('backendUrl').textContent;
     const wsBase = document.getElementById('wsUrl').textContent;
 
-    // Navegación de pestañas
+    // Navegación de pestañas (sidebar)
     document.querySelectorAll('.list-group .list-group-item').forEach(a => {
       a.addEventListener('click', (e) => {
         e.preventDefault();
+        if (!a.dataset.tab) return;
+
         document.querySelectorAll('.list-group .list-group-item').forEach(x => x.classList.remove('active'));
         a.classList.add('active');
+
         const tab = a.getAttribute('data-tab');
         document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
         document.getElementById(tab).classList.add('active');
       });
     });
 
-    // Inicializar mapa (Leaflet)
-    const map = L.map('map').setView([4.5709, -74.2973], 6); // Colombia centro por defecto
+    // Mapa Leaflet
+    const map = L.map('map').setView([4.5709, -74.2973], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Marcadores y capas
     const zonasLayer = L.layerGroup().addTo(map);
     const rutasLayer = L.layerGroup().addTo(map);
 
-    // WebSocket STOMP client (plantilla)
+    // WebSocket STOMP
     let stompClient = null;
     function connectWebSocket() {
-      const socket = new SockJS(wsBase.replace('ws://', ''));
+      const httpUrl = wsBase.replace('ws://', 'http://'); // adaptado para SockJS
+      const socket = new SockJS(httpUrl);
       stompClient = StompJs.Stomp.over(socket);
       stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
@@ -631,7 +637,7 @@
       });
     }
 
-    // Agregar log
+    // Log de acciones
     function addLog(text) {
       const li = document.createElement('li');
       li.className = 'list-group-item';
@@ -640,12 +646,13 @@
       list.prepend(li);
     }
 
-    // --- Crear recurso ---
+    // Crear recurso
     document.getElementById('form-create-resource').addEventListener('submit', (e) => {
       e.preventDefault();
       const nombre = document.getElementById('r_nombre').value;
       const tipo = document.getElementById('r_tipo').value;
       const cantidad = +document.getElementById('r_cantidad').value;
+
       fetch(apiBase + '/recursos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -656,10 +663,10 @@
           addLog('Recurso creado: ' + data.nombre);
           loadRecursos();
         })
-        .catch(err => { console.error(err); addLog('Error creando recurso') });
+        .catch(err => { console.error(err); addLog('Error creando recurso'); });
     });
 
-    // --- Crear ubicación ---
+    // Crear ubicación
     document.getElementById("form-create-ubicacion").addEventListener("submit", async (event) => {
       event.preventDefault();
 
@@ -691,6 +698,7 @@
           const data = JSON.parse(msg);
           addLog('Ubicación creada: ' + data.nombre);
           loadUbicaciones();
+          loadZonas();
           Swal.fire('Éxito', 'Ubicación creada correctamente', 'success');
         }
 
@@ -700,7 +708,7 @@
       }
     });
 
-    // --- Cargar ubicaciones ---
+    // Cargar ubicaciones (tabla)
     function loadUbicaciones() {
       fetch(apiBase + '/zonas')
         .then(r => r.json())
@@ -724,23 +732,30 @@
 
     document.addEventListener('DOMContentLoaded', loadUbicaciones);
 
-    // --- Crear ruta ---
+    // Crear ruta (por ahora sin tocar mucho tu lógica original)
     document.getElementById("form-create-route").addEventListener('submit', (event) => {
       event.preventDefault();
 
-      const origen = document.getElementById("r_origen").value;
-      const destino = document.getElementById("r_destino").value;
-      const distancia = document.getElementById("r_distancia").value;
+      var origen = document.getElementById("r_origen").value;
+      var destino = document.getElementById("r_destino").value;
+      var distancia = document.getElementById("r_distancia").value;
 
-      // Aquí podrías diferenciar por botón si quieres
-      fetch(apiBase + '/rutas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ origen, destino, distancia })
-      });
+      if (document.activeElement.id === "btn-create-route-name") {
+        fetch(apiBase + '/rutas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origen, destino, distancia })
+        });
+      } else if (document.activeElement.id === "btn-create-route-coordenadas") {
+        fetch(apiBase + '/rutas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origen, destino, distancia })
+        });
+      }
     });
 
-    // --- Cargar recursos ---
+    // Cargar recursos
     function loadRecursos() {
       fetch(apiBase + '/recursos')
         .then(r => r.json())
@@ -764,7 +779,7 @@
         .catch(e => console.warn('No se pudo cargar recursos', e));
     }
 
-    // --- Click en "Ver" zona en la tabla ---
+    // Click en "Ver" zona tabla
     document.querySelector('#tabla-zonas tbody').addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-id]');
       if (!btn) return;
@@ -792,7 +807,7 @@
       });
     }
 
-    // --- Cargar zonas ---
+    // Cargar zonas
     function loadZonas() {
       fetch(apiBase + '/zonas')
         .then(r => r.json())
@@ -800,7 +815,14 @@
           const tbody = document.querySelector('#tabla-zonas tbody');
           tbody.innerHTML = '';
           zonasLayer.clearLayers();
+
+          let countCritical = 0;
+          let totalEvacuated = 0;
+
           list.forEach(z => {
+            if (z.nivelRiesgo === 'CRITICO') countCritical++;
+            totalEvacuated += z.personasAfectadas || 0;
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>${z.nombre}</td>
@@ -809,8 +831,8 @@
                 z.nivelRiesgo === 'CRITICO' || z.nivelRiesgo === 'ALTO'
                   ? 'badge-risk-high'
                   : z.nivelRiesgo === 'MEDIO'
-                  ? 'badge-risk-medium'
-                  : 'badge-risk-low'
+                    ? 'badge-risk-medium'
+                    : 'badge-risk-low'
               }">${z.nivelRiesgo}</span></td>
               <td>${z.personasAfectadas}</td>
               <td>${z.recursosNecesarios?.length || 0}</td>
@@ -830,60 +852,64 @@
               zonasLayer.addLayer(m);
             }
           });
+
+          document.getElementById('countCritical').textContent = countCritical;
+          document.getElementById('totalEvacuated').textContent = totalEvacuated;
         })
         .catch(e => console.warn('No se pudo cargar zonas', e));
     }
 
-    // --- Inicialización ---
+    // ===============================
+    //   Cargar usuario actual (navbar)
+    // ===============================
+    function cargarUsuarioActual() {
+      const userSpan = document.getElementById("currentUser");
+      if (!userSpan) return;
+
+      fetch("/api/usuario/actual")
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("No autenticado o error en /api/usuario/actual");
+          }
+          return res.json();
+        })
+        .then((user) => {
+          if (!user) return;
+          const rolLabel = user.rol === "ADMINISTRADOR" ? "Admin" : "Operador";
+          userSpan.textContent = `${rolLabel}: ${user.nombre} (${user.email})`;
+        })
+        .catch((err) => {
+          console.warn("No se pudo cargar el usuario actual:", err);
+        });
+    }
+
+    // Inicialización
     window.addEventListener('load', () => {
       try { connectWebSocket(); } catch (e) { console.warn('WS init error', e); }
       loadRecursos();
       loadZonas();
+      cargarUsuarioActual();
 
-      document.getElementById('btn-load-sample').addEventListener('click', () => {
-        fetch(apiBase + '/admin/cargar-muestra', { method: 'POST' })
-          .then(() => { addLog('Datos de muestra cargados'); loadZonas(); loadRecursos(); })
-          .catch(() => addLog('Error cargando datos de muestra'));
-      });
+      const btnSample = document.getElementById('btn-load-sample');
+      if (btnSample) {
+        btnSample.addEventListener('click', () => {
+          fetch(apiBase + '/admin/cargar-muestra', { method: 'POST' })
+            .then(() => { addLog('Datos de muestra cargados'); loadZonas(); loadRecursos(); })
+            .catch(() => addLog('Error cargando datos de muestra'));
+        });
+      }
 
-      document.getElementById('btn-refresh').addEventListener('click', () => {
-        loadRecursos();
-        loadZonas();
-        addLog('Datos refrescados manualmente');
-      });
+      const btnRefresh = document.getElementById('btn-refresh');
+      if (btnRefresh) {
+        btnRefresh.addEventListener('click', () => {
+          loadRecursos();
+          loadZonas();
+          addLog('Datos refrescados manualmente');
+        });
+      }
     });
 
-    function mostrarGrafoTerm() {
-      let listaRutas = fetch(apiBase + '/rutas').then(r => r.json());
-      listaRutas.forEach(r => {
-        console.log(r.origen.nombre + "->" + r.destino.nombre);
-      });
-    }
-
-    function validarUbicacion(ubicacion) {
-      const tiposValidos = ['URBANA', 'RURAL'];
-      const nivelesRiesgo = ['BAJO', 'MEDIO', 'ALTO', 'CRITICO'];
-
-      if (!tiposValidos.includes(ubicacion.tipo)) {
-        throw new Error('Tipo de ubicación no válido');
-      }
-
-      if (!nivelesRiesgo.includes(ubicacion.nivelRiesgo)) {
-        throw new Error('Nivel de riesgo no válido');
-      }
-
-      if (!ubicacion.nombre || ubicacion.nombre.trim() === '') {
-        throw new Error('El nombre es requerido');
-      }
-
-      return true;
-    }
-
-    // =======================
-    //  LOGOUT / CERRAR SESIÓN
-    // =======================
-
-    // Botón "Cerrar sesión" del menú superior
+    // LOGOUT / SALIR
     const logoutLink = document.getElementById('menu-logout');
     if (logoutLink) {
       logoutLink.addEventListener('click', (e) => {
@@ -892,7 +918,6 @@
       });
     }
 
-    // Botón "Salir (apagar demo)" del menú lateral
     const exitLink = document.getElementById('menu-exit');
     if (exitLink) {
       exitLink.addEventListener('click', (e) => {
@@ -911,9 +936,27 @@
         });
       });
     }
-  </script>
 
-  
+    // Validación de ubicación (si quieres usarla luego)
+    function validarUbicacion(ubicacion) {
+      const tiposValidos = ['URBANA', 'RURAL'];
+      const nivelesRiesgo = ['BAJO', 'MEDIO', 'ALTO', 'CRITICO'];
+
+      if (!tiposValidos.includes(ubicacion.tipo)) {
+        throw new Error('Tipo de ubicación no válido');
+      }
+
+      if (!nivelesRiesgo.includes(ubicacion.nivelRiesgo)) {
+        throw new Error('Nivel de riesgo no válido');
+      }
+
+      if (!ubicacion.nombre || ubicacion.nombre.trim() === '') {
+        throw new Error('El nombre es requerido');
+      }
+
+      return true;
+    }
+  </script>
 </body>
 
 </html>
