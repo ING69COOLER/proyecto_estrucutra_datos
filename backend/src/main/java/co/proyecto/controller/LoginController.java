@@ -36,10 +36,10 @@ public class LoginController {
     public String procesarLogin(@RequestParam String email,
                                 @RequestParam String contrasena,
                                 HttpSession session,
-                                Model model) {
+                                Model model) throws InterruptedException {
 
         
-        pruebasGrafo.verificarGrafo();
+        //pruebasGrafo.verificarGrafo();
         
         Optional<Usuario> usuarioOpt = usuarioService.login(email, contrasena);
 

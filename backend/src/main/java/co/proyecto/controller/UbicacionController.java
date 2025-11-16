@@ -31,6 +31,10 @@ public class UbicacionController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Ubicacion ubicacion) {
     try {
+        for(int i = 0; i<100; i++){
+            System.out.println(i);
+        }
+        System.out.print(ubicacion.getNivelRiesgo());
         System.out.println("Datos recibidos: " + ubicacion);
 
         // Validación de campos obligatorios
@@ -42,10 +46,8 @@ public class UbicacionController {
 
         // Validación de duplicados
             boolean existeDuplicado =
-                !ubicacionRepository.findByNombreAndLatAndLng(ubicacion.getNombre(), ubicacion.getLat(), ubicacion.getLng()).isEmpty() ||
-                !ubicacionRepository.findByLatAndLng(ubicacion.getLat(), ubicacion.getLng()).isEmpty() ||
-                !ubicacionRepository.findByNombre(ubicacion.getNombre()).isEmpty();
-
+                !ubicacionRepository.findByLatAndLng(ubicacion.getLat(), ubicacion.getLng()).isEmpty();
+                
             if (existeDuplicado) {
                 return ResponseEntity.status(409).body("Ya existe una ubicación con esos datos");
             }

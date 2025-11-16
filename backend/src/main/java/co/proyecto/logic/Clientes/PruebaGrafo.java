@@ -20,11 +20,11 @@ public class PruebaGrafo {
 
 
 
-    public void verificarGrafo(){
+    public void verificarGrafo() throws InterruptedException{
     System.out.println("Inicio de carga de grafo -----------------------------------------------------------------");
     RutaClient rutaClient = new RutaClient();
 
-    // 1. Crear 10 ubicaciones conocidas de Colombia
+    /*// 1. Crear 10 ubicaciones conocidas de Colombia
     Ubicacion[] ciudades = new Ubicacion[] {
         crearUbicacion("Bogotá", 4.7110, -74.0721),
         crearUbicacion("Medellín", 6.2442, -75.5812),
@@ -54,7 +54,7 @@ public class PruebaGrafo {
     for(Ruta ruta: rutas){
         rutaRepository.save(ruta);
     }
-         
+         */
 
     //System.out.println("Grafo cargado con " + ciudades.length + " ubicaciones y " + totalRutas + " rutas.");
 
@@ -78,13 +78,15 @@ private Ubicacion crearUbicacion(String nombre, double lat, double lng){
     return u;
 }
 
-private Ruta crearRuta(Ubicacion origen, Ubicacion destino, RutaClient rutaClient){
+private Ruta crearRuta(Ubicacion origen, Ubicacion destino, RutaClient rutaClient) throws InterruptedException{
     Ruta r = new Ruta();
     r.setOrigen(origen);
     r.setDestino(destino);
     double distancia = rutaClient.calcularDistancia(origen.getLat(), origen.getLng(),
                                                     destino.getLat(), destino.getLng());
     r.setDistancia(distancia);
+
+    Thread.sleep(10000);
     
     return r;
 }
