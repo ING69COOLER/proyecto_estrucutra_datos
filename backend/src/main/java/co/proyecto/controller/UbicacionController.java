@@ -21,6 +21,10 @@ public class UbicacionController {
     public ResponseEntity<List<Ubicacion>> getAll() {
         try {
             List<Ubicacion> ubicaciones = ubicacionRepository.findAll();
+            System.out.println("/*/*/*/////*/*/*/*//*/*/**/*/*///*/*/***/*/*/*/*/");
+            for (Ubicacion ubicacion : ubicaciones) {
+                System.out.println(ubicacion.toString());
+            }
             return ResponseEntity.ok(ubicaciones);
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,7 +51,7 @@ public class UbicacionController {
         // Validación de duplicados
             boolean existeDuplicado =
                 !ubicacionRepository.findByLatAndLng(ubicacion.getLat(), ubicacion.getLng()).isEmpty();
-                
+
             if (existeDuplicado) {
                 return ResponseEntity.status(409).body("Ya existe una ubicación con esos datos");
             }

@@ -3,7 +3,19 @@ package co.proyecto.model;
 import co.proyecto.logic.estructuraGrafo.Arista;
 import co.proyecto.logic.estructuraGrafo.Nodo;
 import jakarta.persistence.*;
+// 👇 IMPORTS AÑADIDOS
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
+
+
+
+// 👇 ANOTACIÓN AÑADIDA
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "id"
+)
 @Entity
 public class Ruta implements Arista<Ubicacion> {
     @Id

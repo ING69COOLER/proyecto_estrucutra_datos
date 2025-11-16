@@ -44,6 +44,7 @@ public class RutaController {
         ruta.setDestino(request.getDestino());
         RutaClient cliente = new RutaClient();
         ruta.setDistancia(cliente.calcularDistancia(request.getOrigen().getLat(), request.getOrigen().getLng(), request.getDestino().getLat(), request.getDestino().getLng()));
+        rutaRepository.save(ruta);
         return ResponseEntity.ok("se guardo correctamente");
             } catch (Exception e){
                 return ResponseEntity

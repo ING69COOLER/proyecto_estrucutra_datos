@@ -13,7 +13,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <!-- Font Awesome (íconos) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
 
   <style>
     body {
@@ -111,6 +113,7 @@
             <a href="#" class="list-group-item list-group-item-action active" data-tab="inicio">Inicio</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="panel-admin">Panel Administración</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="crear-ubicacion">Crear Ubicación</a>
+            <a href="#" class="list-group-item list-group-item-action" data-tab="crear-ruta">Crear Ruta</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="panel-rutas">Panel Rutas</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="estadisticas">Estadísticas</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="mapa">Mapa Interactivo</a>
@@ -399,6 +402,31 @@
 
 </section>
 
+<!-- CREAR RUTA -->
+<section id="crear-ruta" class="tab-section">
+
+  <h4 class="mb-3">Crear Ruta</h4>
+  <p class="text-muted">Selecciona dos puntos en el mapa para trazar la ruta.</p>
+
+  <div class="row g-2 mb-3">
+
+    <div class="col-12">
+      <div id="map-crear-ruta" style="height:700px; border-radius:8px;"></div>
+    </div>
+
+    <div class="col-md-6 d-grid mt-3">
+      <button class="btn btn-danger btn-sm" id="cr_limpiar">Limpiar selección</button>
+    </div>
+
+    <div class="col-md-6 d-grid mt-3">
+      <button class="btn btn-success btn-sm" id="cr_guardar">Guardar Ruta</button>
+    </div>
+
+  </div>
+
+</section>
+
+
 
         <!-- PANEL RUTAS -->
         <section id="panel-rutas" class="tab-section">
@@ -646,52 +674,69 @@
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.7.5/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script> 
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <!-- JS principal -->
   <script>
     const apiBase = document.getElementById('backendUrl').textContent;
-  const wsBase = document.getElementById('wsUrl').textContent;
+    const wsBase = document.getElementById('wsUrl').textContent;
 
-// Navegación de pestañas (sidebar)
-document.querySelectorAll('.list-group .list-group-item').forEach(a => {
-  a.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (!a.dataset.tab) return;
+    // Navegación de pestañas (sidebar)
+    document.querySelectorAll('.list-group .list-group-item').forEach(a => {
+      a.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!a.dataset.tab) return;
 
-    document.querySelectorAll('.list-group .list-group-item')
+      document.querySelectorAll('.list-group .list-group-item')
       .forEach(x => x.classList.remove('active'));
-    a.classList.add('active');
+      a.classList.add('active');
 
-    const tab = a.getAttribute('data-tab');
+      const tab = a.getAttribute('data-tab');
 
-    document.querySelectorAll('.tab-section')
+      document.querySelectorAll('.tab-section')
       .forEach(s => s.classList.remove('active'));
-    document.getElementById(tab).classList.add('active');
+     document.getElementById(tab).classList.add('active');
 
     // ───────────────────────────────────────────
     //  INICIALIZAR MAPA SOLO EN ESTA PESTAÑA
     // ───────────────────────────────────────────
-    if (tab === "crear-ubicacion") {
-      setTimeout(() => {
-        if (!cuMap) {
-          cuMap = L.map("map-crear-ubicacion").setView([4.65, -74.1], 12);
+      if (tab === "crear-ubicacion") {
+        setTimeout(() => {
+          if (!cuMap) {
+            cuMap = L.map("map-crear-ubicacion").setView([4.65, -74.1], 12);
 
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19
-          }).addTo(cuMap);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+             maxZoom: 19
+            }).addTo(cuMap);
 
-          cuMap.on("click", (e) => {
-            if (cuMarker) cuMap.removeLayer(cuMarker);
-            cuMarker = L.marker(e.latlng).addTo(cuMap);
+            cuMap.on("click", (e) => {
+              if (cuMarker) cuMap.removeLayer(cuMarker);
+              cuMarker = L.marker(e.latlng).addTo(cuMap);
 
-            cu_lat.value = e.latlng.lat.toFixed(6);
-            cu_lng.value = e.latlng.lng.toFixed(6);
-          });
-        }
+              cu_lat.value = e.latlng.lat.toFixed(6);
+              cu_lng.value = e.latlng.lng.toFixed(6);
+            });
+          }
 
-        cuMap.invalidateSize(); // ← Arregla el mapa roto
-      }, 100);
-    }
+          cuMap.invalidateSize(); // ← Arregla el mapa roto
+        }, 100);
+      }
     // ───────────────────────────────────────────
+
+    if (tab === "crear-ruta") {
+      setTimeout(() => {
+        if (!crMap) {
+          initCrearRutaMap();
+        } else {
+          // Necesario porque Leaflet a veces no se ve bien al aparecer
+          crMap.invalidateSize();
+        }
+      }, 50);
+    }
   });
 });
 
@@ -770,7 +815,201 @@ document.querySelectorAll('.list-group .list-group-item').forEach(a => {
     }
 
   });
+// =============================
+  //    MAPA PARA CREAR RUTA
+  // =============================
 
+let crMap = null;
+let crMarkers = [];        // todos los puntos cargados
+let crSelected = [];       // los puntos seleccionados (max 2)
+
+// 'crLine' es el CONTROLADOR de ruteo
+let crLine = null; 
+// 'crRouteSummary' guardará la distancia
+let crRouteSummary = null;
+
+async function initCrearRutaMap() {
+  crMap = L.map("map-crear-ruta").setView([4.65, -74.1], 12);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19
+  }).addTo(crMap);
+
+  const ubicaciones = await loadUbicacionesParaRutas();
+  const bounds = [];
+  
+  crMarkers.forEach(m => crMap.removeLayer(m));
+  crMarkers = [];
+  limpiarRuta(); // Limpiar la selección
+
+  ubicaciones.forEach(u => {
+    if (u.lat && u.lng) {
+      const marker = L.marker([u.lat, u.lng])
+        .addTo(crMap)
+        .bindPopup(`<b>${u.nombre}</b>`);
+
+      marker.data = u; 
+      marker.on("click", () => selectPunto(marker));
+      crMarkers.push(marker);
+      bounds.push([u.lat, u.lng]);
+    }
+  });
+
+  if (bounds.length > 0) {
+    crMap.fitBounds(bounds, { padding: [50, 50] });
+  }
+
+  setTimeout(() => crMap.invalidateSize(), 150);
+}
+
+// Helper para cargar ubicaciones
+async function loadUbicacionesParaRutas() {
+  try {
+    const res = await fetch(apiBase + "/zonas");
+    if (!res.ok) {
+      console.error("Error cargando ubicaciones:", res.status);
+      return [];
+    }
+    return await res.json();
+  } catch (error) {
+    console.error("Error en fetch:", error);
+    return [];
+  }
+}
+
+// -----------------------------
+// Manejo de selección de puntos
+// -----------------------------
+function selectPunto(marker) {
+  if (crSelected.includes(marker)) return;
+
+  if (crSelected.length === 2) {
+    Swal.fire("Máximo 2 puntos", "Ya has seleccionado dos puntos. Limpia la selección primero.", "info");
+    return;
+  }
+
+  crSelected.push(marker);
+  
+  // Dibujar ruta si ya hay dos puntos
+  if (crSelected.length === 2) {
+    dibujarRuta();
+  }
+}
+
+// -----------------------------
+// Dibujar la LÍNEA DE RUTA (CORREGIDO)
+// -----------------------------
+function dibujarRuta() {
+  const p1 = crSelected[0].getLatLng();
+  const p2 = crSelected[1].getLatLng();
+
+  // borrar ruta previa si existe
+  if (crLine) {
+    crMap.removeControl(crLine);
+    crLine = null;
+    crRouteSummary = null;
+  }
+
+  // ✅ ESTA ES LA CORRECCIÓN CLAVE:
+  // Dejamos que el plugin cree sus marcadores por defecto (A y B)
+  // y solo ocultamos el panel de instrucciones de texto.
+  crLine = L.Routing.control({
+    waypoints: [p1, p2],
+    show: false, // Oculta el panel de texto de "instrucciones"
+    routeWhileDragging: false, // No permite arrastrar la ruta
+    addWaypoints: false, // No permite añadir más puntos
+    
+    // 👇 Ya no usamos 'createMarker', dejamos que el plugin
+    //    ponga sus marcadores A (verde) y B (rojo) por defecto.
+    
+    // Personalizar el color de la línea
+    lineOptions: {
+      styles: [{color: 'blue', opacity: 0.8, weight: 6}]
+    }
+  }).addTo(crMap);
+
+  // Escuchar cuando la ruta se calcula para obtener la distancia
+  crLine.on('routesfound', function(e) {
+      if (e.routes && e.routes.length > 0) {
+          crRouteSummary = e.routes[0].summary;
+          console.log(`Ruta encontrada: ${crRouteSummary.totalDistance} metros.`);
+      }
+  });
+}
+
+// -----------------------------
+// Limpiar selección (CORREGIDO)
+// -----------------------------
+function limpiarRuta() {
+  // ✅ CORRECCIÓN: Ya no necesitamos hacer visibles los marcadores
+  // porque nunca los ocultamos.
+  
+  crSelected = [];
+  crRouteSummary = null;
+
+  // Borrar el control de ruta del mapa (esto borra los
+  // marcadores A/B y la línea azul)
+  if (crLine) {
+    crMap.removeControl(crLine);
+    crLine = null;
+  }
+}
+
+// Conectar botón "Limpiar"
+document.getElementById("cr_limpiar").addEventListener("click", limpiarRuta);
+
+
+// ---------------------------------
+//  LÓGICA DE GUARDADO (Sin cambios, pero la incluyo)
+// ---------------------------------
+document.getElementById("cr_guardar").addEventListener("click", guardarRuta);
+
+async function guardarRuta() {
+  if (crSelected.length !== 2) {
+    Swal.fire("Error", "Debes seleccionar exactamente dos puntos (origen y destino) en el mapa.", "warning");
+    return;
+  }
+  
+  if (!crRouteSummary) {
+    Swal.fire("Espera", "La ruta aún se está calculando. Inténtalo de nuevo en un segundo.", "info");
+    return;
+  }
+
+  const markerOrigen = crSelected[0];
+  const markerDestino = crSelected[1];
+  const distanciaKm = crRouteSummary.totalDistance / 1000;
+//id: markerDestino.data.id 
+  const payload = {
+    origen: { id: markerOrigen.data.id ,lat: markerOrigen.data.lat, lng: markerOrigen.data.lng, nombre: markerOrigen.data.nombre },
+    destino: { id: markerDestino.data.id ,lat: markerDestino.data.lat, lng: markerDestino.data.lng, nombre: markerDestino.data.nombre},
+  };
+
+  console.log("Enviando ruta:", payload);
+
+  try {
+    const res = await fetch(apiBase + '/rutas/crear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      Swal.fire(
+        '¡Ruta Creada!',
+        `Se guardó la ruta entre ${markerOrigen.data.nombre} y ${markerDestino.data.nombre} (${payload.distancia} km).`,
+        'success'
+      );
+      limpiarRuta();
+    } else {
+      const errorMsg = await res.text();
+      Swal.fire('Error al guardar', `No se pudo crear la ruta: ${errorMsg}`, 'error');
+    }
+
+  } catch (error) {
+    console.error('Error en fetch al guardar ruta:', error);
+    Swal.fire('Error de Red', 'No se pudo conectar con el servidor.', 'error');
+  }
+}
 
 
     // Mapa Leaflet
