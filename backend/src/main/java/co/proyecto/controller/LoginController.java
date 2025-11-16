@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import co.proyecto.logic.UsuarioService;
+import co.proyecto.logic.Clientes.PruebaGrafo;
 import co.proyecto.model.Usuario;
 import co.proyecto.model.enums.Rol;
 import jakarta.servlet.http.HttpSession;
@@ -19,9 +20,11 @@ public class LoginController {
 
     private final UsuarioService usuarioService;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoginController.class);
+    private final PruebaGrafo pruebasGrafo; // Spring inyectará
 
-    public LoginController(UsuarioService usuarioService) {
+    public LoginController(UsuarioService usuarioService, PruebaGrafo pruebaGrafo) {
         this.usuarioService = usuarioService;
+        this.pruebasGrafo = pruebaGrafo;
     }
 
     @GetMapping("/login")
@@ -34,6 +37,10 @@ public class LoginController {
                                 @RequestParam String contrasena,
                                 HttpSession session,
                                 Model model) {
+
+        
+        pruebasGrafo.verificarGrafo();
+        
         Optional<Usuario> usuarioOpt = usuarioService.login(email, contrasena);
 
         if (usuarioOpt.isEmpty()) {

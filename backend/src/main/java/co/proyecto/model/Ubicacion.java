@@ -2,10 +2,13 @@ package co.proyecto.model;
 
 import jakarta.persistence.*;
 import java.util.List;
+
+import org.hibernate.internal.util.compare.ComparableComparator;
+
 import java.util.Date;
 
 @Entity
-public class Ubicacion {
+public class Ubicacion implements Comparable<Ubicacion>{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id; // Cambiado de idUbicacion a id
@@ -135,6 +138,12 @@ public class Ubicacion {
 
     public void setRutasDestino(List<Ruta> rutasDestino) {
         this.rutasDestino = rutasDestino;
+    }
+
+    @Override
+    public int compareTo(Ubicacion arg0) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'compareTo'");
     }
 
 }

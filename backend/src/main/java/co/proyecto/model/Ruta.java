@@ -5,7 +5,7 @@ import co.proyecto.logic.estructuraGrafo.Nodo;
 import jakarta.persistence.*;
 
 @Entity
-public class Ruta <T extends Comparable> implements Arista<T> {
+public class Ruta implements Arista<Ubicacion> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -22,7 +22,7 @@ public class Ruta <T extends Comparable> implements Arista<T> {
 
     public Ruta() {} // Constructor vacío requerido por JPA
 
-    public Ruta(Nodo<T> I, Nodo<T> F, double distancia){
+    public Ruta(Nodo<Ubicacion> I, Nodo<Ubicacion> F, double distancia){
         origen = (Ubicacion) I.getValor();
         destino = (Ubicacion) F.getValor();
         this.distancia = distancia;
@@ -61,28 +61,28 @@ public class Ruta <T extends Comparable> implements Arista<T> {
     }
 
     @Override
-    public void setCola(Nodo<T> cola) {
+    public void setCola(Nodo<Ubicacion> cola) {
         this.destino = (Ubicacion)cola.getValor();
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setCola'");
     }
 
     @Override
-    public void setCabeza(Nodo<T> cabeza) {
+    public void setCabeza(Nodo<Ubicacion> cabeza) {
         this.origen = (Ubicacion)cabeza.getValor();
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setCabeza'");
     }
 
     @Override
-    public Nodo<T> getCola() {
-        return new Nodo<T>((T)destino);
+    public Nodo<Ubicacion> getCola() {
+        return new Nodo<Ubicacion>((Ubicacion)destino);
     }
 
     @Override
-    public Nodo<T> getCabeza() {
+    public Nodo<Ubicacion> getCabeza() {
         // TODO Auto-generated method stub
-        return new Nodo<T>((T)origen);
+        return new Nodo<Ubicacion>((Ubicacion)origen);
     }
 
 }

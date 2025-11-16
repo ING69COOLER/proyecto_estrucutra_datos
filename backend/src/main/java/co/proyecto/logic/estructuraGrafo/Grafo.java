@@ -3,58 +3,57 @@ package co.proyecto.logic.estructuraGrafo;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
 
 import co.proyecto.model.Ruta;
+import co.proyecto.model.Ubicacion;
+import co.proyecto.repository.RutaRepository;
+import co.proyecto.repository.UbicacionRepository;
 
+@Component
 public class Grafo <T extends Comparable>{
     //composicion
-    private LinkedList<Nodo> nodos;
-    private LinkedList<Arista> aristas;
+    private LinkedList<Ubicacion> nodos;
+    private LinkedList<Ruta> aristas;
     //matrizAdyacencia con infinitos
     double[][] matrizAdyacencia;
     //resultado warshall
     double[][] caminoCortoWarshall;
     int[][] recorridoCortoWarshall;
+    RutaRepository rutaRepository;
+    UbicacionRepository ubicacionRepository;
 
-
-    public Grafo(){
+    
+    public Grafo(RutaRepository rutaRepository, UbicacionRepository ubicacionRepository){
+        this.rutaRepository = rutaRepository;
+        this.ubicacionRepository = ubicacionRepository;
         nodos = new LinkedList<>();
         aristas = new LinkedList<>();
     }
 
-    public void agregarNodo(T valor){
-        Nodo<T> nodo = new Nodo<>(valor);
-	    nodos.add(nodo);
+    
+    public void cargarTodo(){
+
+        List<Ruta> rutas = rutaRepository.findAll();
+        aristas = new LinkedList<>(rutas);
+        
+        List<Ubicacion> ubicaciones = ubicacionRepository.findAll();
+        nodos = new LinkedList<>(ubicaciones); 
+
+        actualizarMatrizAdyacencia();
+       
     }
-    public void agregarRelacion(T valorI, T valorF, double distancia){
-        try {
-            Nodo<T> nodoI = encontrarNodo(valorI);
-            Nodo<T> nodoF = encontrarNodo(valorF);
-            if (nodoF != null && nodoI != null) {
-            Arista arista = new Ruta<>(nodoI,nodoF, distancia);
-            aristas.add(arista);
-            actualizarMatrizAdyacencia();
-        }
-        } catch (Exception e) {
-            System.err.print(e + "no hay relacion");
-        }
-    }
-    private Nodo<T> encontrarNodo(T valor){
-	    for (Nodo<T> nodo: nodos) {
-	        if (nodo.getValor().equals(valor)) {
-	    	    return nodo;
-	        }
-	    }
-        return null;
-    }
+    
 
     public void imprimirAristasGrafo(){
         imprimirAristas(aristas);
     }
 
-    public void imprimirAristas(List<Arista> aristasIn){
-        for (Arista arista : aristasIn) {
-            System.out.println("arista :  " + (Integer)arista.getCabeza().getValor() + "  --->  " + (Integer)arista.getCola().getValor()+ "  ; con valor de:  " +  arista.getDistancia());
+    public void imprimirAristas(List<Ruta> aristasIn){
+        for (Ruta arista : aristasIn) {
+            System.out.println("arista :  " + arista.getOrigen().getNombre() + "  --->  " + arista.getDestino().getNombre()+ "  ; con valor de:  " +  arista.getDistancia());
         }
     }
 
@@ -73,9 +72,9 @@ public class Grafo <T extends Comparable>{
             }
         }
 
-        for (Arista arista : aristas) {
-            var a = nodos.indexOf(arista.getCabeza());
-            var b = nodos.indexOf(arista.getCola());
+        for (Ruta arista : aristas) {
+            var a = nodos.indexOf(arista.getOrigen());
+            var b = nodos.indexOf(arista.getDestino());
             matrizAdyacencia[a][b] = arista.getDistancia();
         }
         
@@ -133,11 +132,11 @@ public class Grafo <T extends Comparable>{
         }
     }
 
-    public LinkedList<Nodo> getNodos() {
+    public LinkedList<Ubicacion> getNodos() {
         return nodos;
     }
 
-    public LinkedList<Arista> getAristas() {
+    public LinkedList<Ruta> getAristas() {
         return aristas;
     }
 
