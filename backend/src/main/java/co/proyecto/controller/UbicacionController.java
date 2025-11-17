@@ -1,9 +1,12 @@
 package co.proyecto.controller;
 
+import co.proyecto.estructuras.ColaPrioridad;
 import co.proyecto.model.Ubicacion;
 import co.proyecto.repository.UbicacionRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -12,9 +15,11 @@ import java.util.List;
 public class UbicacionController {
 
     private final UbicacionRepository ubicacionRepository;
+    private final ColaPrioridad colaPrioridad;
 
-    public UbicacionController(UbicacionRepository ubicacionRepository) {
+    public UbicacionController(UbicacionRepository ubicacionRepository, ColaPrioridad colaPrioridad) {
         this.ubicacionRepository = ubicacionRepository;
+        this.colaPrioridad = colaPrioridad;
     }
     //obtiene todas las ubicaciones
     @GetMapping
@@ -78,5 +83,15 @@ public class UbicacionController {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/prioridad")
+    public ResponseEntity<List<Ubicacion>> getPriority(){
+        List<Ubicacion> ubicacionesP = new ArrayList<>();
+        while (colaPrioridad.peek() != null) {
+            ubicacionesP.add(colaPrioridad.pool());
+        }
+        colaPrioridad.cargarTodo();
+        return ResponseEntity.ok(ubicacionesP);
     }
 }

@@ -8,6 +8,7 @@ import org.hibernate.internal.util.compare.ComparableComparator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import java.util.Objects;
 
 import java.util.Date;
 
@@ -18,7 +19,7 @@ import java.util.Date;
     //property = "id"
 //)
 @Entity
-public class Ubicacion implements Comparable<Ubicacion>{
+public class Ubicacion implements Comparable<Ubicacion> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id; // Cambiado de idUbicacion a id
@@ -54,6 +55,25 @@ public class Ubicacion implements Comparable<Ubicacion>{
     private List<Ruta> rutasDestino;
 
     public Ubicacion() {
+    }
+
+    private Integer getValorRiesgo(String nivelRiesgo) {
+        if (nivelRiesgo == null) {
+            return 5; // Prioridad más baja si no tiene riesgo
+        }
+        
+        switch (nivelRiesgo) {
+            case "CRITICO":
+                return 1;
+            case "ALTO":
+                return 2;
+            case "MEDIO":
+                return 3;
+            case "BAJO":
+                return 4;
+            default:
+                return 5; // Prioridad más baja para cualquier otro valor
+        }
     }
 
     public int getId() {
@@ -152,18 +172,39 @@ public class Ubicacion implements Comparable<Ubicacion>{
         this.rutasDestino = rutasDestino;
     }
 
-    @Override
-    public int compareTo(Ubicacion arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'compareTo'");
-    }
-
 
     @Override
     public String toString() {
         return "Ubicacion [id=" + id + ", nombre=" + nombre + ", tipo=" + tipo + ", personasAfectadas="
                 + personasAfectadas + ", nivelRiesgo=" + nivelRiesgo + ", lat=" + lat + ", lng=" + lng + ", updatedAt="
                 + updatedAt + "]";
+    }
+
+    @Override
+    public int compareTo(Ubicacion arg0) {
+        return getValorRiesgo(nivelRiesgo).compareTo(getValorRiesgo(arg0.getNivelRiesgo()));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        // Si son la misma instancia de memoria, son iguales
+        if (this == o) return true;
+        
+        // Si el otro objeto es nulo o no es de la clase Ubicacion, no son iguales
+        if (o == null || getClass() != o.getClass()) return false;
+        
+        // Convertimos el objeto 'o' a Ubicacion
+        Ubicacion ubicacion = (Ubicacion) o;
+        
+        // Comparamos lo único que importa: el ID.
+        // Usamos Objects.equals para manejar de forma segura si el id es 0 o nulo
+        return Objects.equals(id, ubicacion.id);
+    }
+
+    @Override
+    public int hashCode() {
+        // Generamos un "hash" basado solamente en el ID.
+        return Objects.hash(id);
     }
 
 }

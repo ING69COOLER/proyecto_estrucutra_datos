@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
     property = "id"
 )
 @Entity
-public class Ruta implements Arista<Ubicacion> {
+public class Ruta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -35,11 +35,6 @@ public class Ruta implements Arista<Ubicacion> {
 
     public Ruta() {} // Constructor vacío requerido por JPA
 
-    public Ruta(Nodo<Ubicacion> I, Nodo<Ubicacion> F, double distancia){
-        origen = (Ubicacion) I.getValor();
-        destino = (Ubicacion) F.getValor();
-        this.distancia = distancia;
-    }
 
     public int getId() {
         return id;
@@ -71,31 +66,6 @@ public class Ruta implements Arista<Ubicacion> {
 
     public void setDistancia(double distancia) {
         this.distancia = distancia;
-    }
-
-    @Override
-    public void setCola(Nodo<Ubicacion> cola) {
-        this.destino = (Ubicacion)cola.getValor();
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setCola'");
-    }
-
-    @Override
-    public void setCabeza(Nodo<Ubicacion> cabeza) {
-        this.origen = (Ubicacion)cabeza.getValor();
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setCabeza'");
-    }
-
-    @Override
-    public Nodo<Ubicacion> getCola() {
-        return new Nodo<Ubicacion>((Ubicacion)destino);
-    }
-
-    @Override
-    public Nodo<Ubicacion> getCabeza() {
-        // TODO Auto-generated method stub
-        return new Nodo<Ubicacion>((Ubicacion)origen);
     }
 
 }

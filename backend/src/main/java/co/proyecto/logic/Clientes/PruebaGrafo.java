@@ -58,7 +58,7 @@ public class PruebaGrafo {
 
     //System.out.println("Grafo cargado con " + ciudades.length + " ubicaciones y " + totalRutas + " rutas.");
 
-    Grafo grafo = new Grafo<>(rutaRepository, ubicacionRepository);
+    Grafo grafo = new Grafo(rutaRepository, ubicacionRepository);
 
     grafo.cargarTodo();
 

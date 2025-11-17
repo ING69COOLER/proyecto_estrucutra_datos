@@ -212,15 +212,22 @@
 
         <!-- NUEVO: PANEL RUTAS  -->
         <section id="panel-rutas" class="tab-section">
-          <h4 class="mb-3">Analisis de rutas</h4>
-          <p class="text-muted"></p>
+          
+          <div class="row g-3">
+            
+            <div class="col-md-8">
+              <h4 class="mb-3">Mapa General de Operaciones</h4>
+              <p class="text-muted small">Vista de todas las ubicaciones (marcadores) y rutas (líneas). Haz clic en la lista de prioridad para centrar el mapa.</p>
+              <div id="map-crear-ruta" style="height: 700px; border-radius: 8px; z-index: 1;"></div>
+            </div>
 
-          <div class="row g-2 mb-3">
-
-          <div class="col-12">
-            <!-- aca es el mapa -->
-            <div id="map-crear-ruta" style="height:700px; border-radius:8px;"></div>
-          </div>
+            <div class="col-md-4">
+              <h4 class="mb-3">Ubicaciones Prioritarias</h4>
+              <p class="text-muted small">Ubicaciones ordenadas por la cola de prioridad del backend (de mayor a menor urgencia).</p>
+              
+              <div class="list-group" id="lista-prioridad" style="max-height: 700px; overflow-y: auto;">
+                </div>
+            </div>
 
           </div>
         </section>
@@ -372,9 +379,10 @@
 
     // --- Variables Globales para el Mapa de Rutas ---
     let crMap = null; // El objeto mapa
-    let crRouteControls = []; // Para guardar las rutas y poder borrarlas
+    let crRouteControls = []; // Para guardar las rutas (polylines)
     let crMarkersLayer = L.layerGroup(); // Capa para los marcadores
-    let crMapInitialized = false; // Flag para saber si el mapa ya se creó
+    let crMarkers = []; // Array para 'buscar' marcadores (Marker Lookup)
+    let crMapInitialized = false; 
 
     // =============================
     //  NAVEGACIÓN DE PESTAÑAS
@@ -391,14 +399,12 @@
         document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
         document.getElementById(tab).classList.add('active');
 
-        // ✅ DEBUG: Llamada a inicializar el mapa
         if (tab === 'panel-rutas' && !crMapInitialized) {
           console.log("▶️ Detectado clic en 'Panel Rutas', iniciando mapa...");
           initCrearRutaMap();
           crMapInitialized = true;
         } else if (tab === 'panel-rutas') {
            console.log("▶️ Entrando a 'Panel Rutas' (mapa ya inicializado). Refrescando tamaño.");
-           // Si el mapa ya existe, solo refresca su tamaño
            setTimeout(() => crMap.invalidateSize(), 150);
         }
       });
@@ -411,196 +417,174 @@
     // 1. Función para Inicializar el mapa
     function initCrearRutaMap() {
       console.log("🗺️ 1. initCrearRutaMap() - INICIANDO MAPA en #map-crear-ruta");
-      
-      // ✅ CORRECCIÓN: Apuntar al ID correcto 'map-crear-ruta'
       crMap = L.map("map-crear-ruta").setView([4.65, -74.1], 12);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19
-      }).addTo(crMap);
-      
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(crMap);
       crMarkersLayer.addTo(crMap);
-      
-      console.log("🗺️ 2. initCrearRutaMap() - Mapa base creado. Llamando a loadUbicacionesYRutas...");
-      loadUbicacionesYRutas();
+      console.log("🗺️ 2. initCrearRutaMap() - Mapa base creado. Llamando a loadAllData...");
+      loadAllData();
     }
 
-    // 2. Función para cargar ambas cosas (ubicaciones y rutas)
-    async function loadUbicacionesYRutas() {
-      if (!crMap) {
-          console.error("❌ ERROR: Se intentó cargar rutas pero el mapa (crMap) es nulo.");
-          return;
-      }
+    // 2. Función para cargar TODOS los datos (Ubicaciones, Rutas y Prioridad)
+    // 2. Función para cargar TODOS los datos (Ubicaciones, Rutas y Prioridad)
+    async function loadAllData() {
+      if (!crMap) return;
+      console.log("🚚 3. loadAllData() - Empezando a buscar 3 endpoints...");
       
-      console.log("🚚 3. loadUbicacionesYRutas() - Empezando a buscar datos (fetch)...");
-      
-      limpiarRutas();
-      crMarkersLayer.clearLayers();
+      limpiarRutasYLista();
       
       try {
-        const [ubicaciones, rutas] = await Promise.all([
+        // correccion
+        const [ubicaciones, rutas, ubicacionesP] = await Promise.all([
           fetch(apiBase + "/zonas").then(res => res.json()),
-          fetch(apiBase + "/rutas").then(res => res.json())
+          fetch(apiBase + "/rutas").then(res => res.json()),
+          fetch(apiBase + "/zonas/prioridad").then(res => res.json()) // <-- URL CORREGIDA
         ]);
 
-        console.log("✅ 4. loadUbicacionesYRutas() - DATOS RECIBIDOS:", {
-            ubicacionesRecibidas: ubicaciones.length,
-            rutasRecibidas: rutas.length
-        });
-        
-        // --- DEBUG: Imprimir los datos crudos ---
-        console.log("--- DATOS CRUDOS UBICACIONES ---", ubicaciones);
-        console.log("--- DATOS CRUDOS RUTAS ---", rutas);
-        // --- FIN DEBUG ---
+        console.log(`✅ 4. DATOS RECIBIDOS: ${ubicaciones.length} u, ${rutas.length} r, ${ubicacionesP.length} prioritarias`);
 
-        const bounds = [];
+        // Pinta los marcadores (de /zonas) y centra el mapa
+        pintarMarcadores(ubicaciones);
         
-        // Pintar marcadores de ubicación
-        ubicaciones.forEach(u => {
-          if (u.lat && u.lng) {
-            L.marker([u.lat, u.lng])
-              .bindPopup(`<b>${u.nombre}</b><br>${u.tipo || ''}`)
-              .addTo(crMarkersLayer);
-            bounds.push([u.lat, u.lng]);
-          }
-        });
-        
-        console.log(`🖌️ 5. loadUbicacionesYRutas() - ${ubicaciones.length} marcadores pintados. Llamando a trazarRutas...`);
+        // Pinta las rutas (de /rutas)
         trazarRutas(rutas);
 
-        if (bounds.length > 0) {
-          crMap.fitBounds(bounds, { padding: [50, 50] });
-        }
+        // ¡PUEBLA LA LISTA! (de /prioridad)
+        poblarListaPrioridad(ubicacionesP);
 
         setTimeout(() => crMap.invalidateSize(), 150);
 
       } catch (error) {
-        console.error("❌ ERROR FATAL en loadUbicacionesYRutas (fetch):", error);
+        console.error("❌ ERROR FATAL en loadAllData (fetch):", error);
       }
     }
-    // 3. Función para trazar todas las rutas (VERSIÓN DE LÍNEAS RECTAS)
-    //    Esto usa L.polyline y es instantáneo (no usa OSRM).
+
+    // 3. ✅ NUEVO: Función para pintar SÓLO los marcadores
+    function pintarMarcadores(ubicaciones) {
+        crMarkersLayer.clearLayers();
+        crMarkers = []; // Limpia el array de búsqueda
+        const bounds = [];
+        
+        ubicaciones.forEach(u => {
+          if (u.lat && u.lng) {
+            const marker = L.marker([u.lat, u.lng])
+              .bindPopup(`<b>${u.nombre}</b><br>${u.tipo || ''}`)
+              .addTo(crMarkersLayer);
+            
+            marker.data = u; // Guarda el objeto Ubicacion
+            
+            // ✅ Conecta el clic del marcador a la lista
+            marker.on('click', () => handleMarkerClick(u)); 
+            
+            crMarkers.push(marker); // Añade al array de búsqueda
+            bounds.push([u.lat, u.lng]);
+          }
+        });
+        
+        // Centra el mapa para mostrar todos los marcadores
+        if (bounds.length > 0) {
+          crMap.fitBounds(bounds, { padding: [50, 50] });
+        }
+        console.log(`🖌️ 5. pintarMarcadores() - ${ubicaciones.length} marcadores pintados.`);
+    }
+
+    // 4. Función para trazar todas las rutas (Versión Línea Recta)
     function trazarRutas(rutas) {
-      console.log(`🚗 6. trazarRutas() - Recibidas ${rutas.length} rutas para dibujar (modo LÍNEA RECTA).`);
-      limpiarRutas(); // Limpia las polylines anteriores
-
-      rutas.forEach((ruta, index) => {
-        console.log(`--- Procesando ruta ${index + 1}/${rutas.length} (ID: ${ruta.id}) ---`);
-
-        // Validaciones
+      console.log(`🚗 6. trazarRutas() - Dibujando ${rutas.length} rutas (línea recta).`);
+      
+      rutas.forEach(ruta => {
         if (!ruta.origen || !ruta.destino || !ruta.origen.lat || !ruta.destino.lat) {
           console.warn(`⚠️ RUTA SALTADA (ID: ${ruta.id}): Datos incompletos.`);
-          return; // Salta a la siguiente ruta
+          return;
         }
 
-        console.log(`✅ RUTA VÁLIDA: De ${ruta.origen.nombre} a ${ruta.destino.nombre}`);
         const p1 = L.latLng(ruta.origen.lat, ruta.origen.lng);
         const p2 = L.latLng(ruta.destino.lat, ruta.destino.lng);
 
-        // ✅ CAMBIO PRINCIPAL: Usar L.polyline en lugar de L.Routing.control
         const polyline = L.polyline([p1, p2], {
           color: 'blue',
           opacity: 0.7,
           weight: 5
-        }).addTo(crMap); // Añade la línea al mapa
+        }).addTo(crMap);
 
-        // Guardamos los datos en la línea
         polyline.data = ruta;
-
-        // Añadimos el evento de clic
-        polyline.on('click', (event) => {
-          handleRutaClick(event.target.data);
-        });
-
-        // Añadimos el tooltip
+        polyline.on('click', (event) => handleRutaClick(event.target.data));
         polyline.bindTooltip(`Ruta de ${ruta.origen.nombre} a ${ruta.destino.nombre}`, { sticky: true });
-
-        // Guardamos la 'polyline' en el array para poder borrarla
-        crRouteControls.push(polyline);
+        
+        crRouteControls.push(polyline); // Guardamos la polyline para borrarla
       });
       
-      console.log("✅ 7. trazarRutas() - Todas las rutas (líneas rectas) han sido dibujadas.");
+      console.log("✅ 7. trazarRutas() - Todas las rutas dibujadas.");
     }
-
-    // 5. Función para limpiar el mapa (MODIFICADA para polylines)
-    function limpiarRutas() {
-      // Ahora borra 'polylines' usando removeLayer
-      crRouteControls.forEach(linea => {
-        if(crMap) crMap.removeLayer(linea); // Usamos removeLayer
-      });
-      crRouteControls = []; 
-    }
-// 3. Función para trazar todas las rutas (CORREGIDA CON PAUSA SECUENCIAL)
-    // 3. Función para trazar todas las rutas (CORRECCIÓN FINAL)
-    /*async function trazarRutas(rutas) {
-      console.log(`🚗 6. trazarRutas() - Recibidas ${rutas.length} rutas. Iniciando secuencialmente...`);
-      limpiarRutas(); 
-
-      for (const [index, ruta] of rutas.entries()) {
-        console.log(`--- Procesando ruta ${index + 1}/${rutas.length} (ID: ${ruta.id}) ---`);
-
-        if (!ruta.origen || !ruta.destino || !ruta.origen.lat || !ruta.destino.lat) {
-          console.warn(`⚠️ RUTA SALTADA (ID: ${ruta.id}): Datos incompletos.`);
-          continue; 
-        }
-
-        console.log(`✅ RUTA VÁLIDA: De ${ruta.origen.nombre} a ${ruta.destino.nombre}`);
-        const p1 = L.latLng(ruta.origen.lat, ruta.origen.lng);
-        const p2 = L.latLng(ruta.destino.lat, ruta.destino.lng);
-
-        await new Promise((resolve) => {
-          
-          const routeControl = L.Routing.control({
-            waypoints: [p1, p2],
-            show: false, addWaypoints: false, routeWhileDragging: false, createMarker: () => null, 
-            lineOptions: {
-              styles: [{color: 'blue', opacity: 0.8, weight: 6}]
-            },
-            
-            // 👇👇👇 INICIO DE LA CORRECCIÓN 👇👇👇
-            // Forzar al router (OSRM) a que pida la geometría completa ('line')
-            router: L.routing.osrmv1(), // Usar el router OSRM explícitamente
-            routerOptions: {
-              overview: 'full' // Pedir la geometría completa
-            }
-            // 👆👆👆 FIN DE LA CORRECCIÓN 👆👆👆
-
-          }).addTo(crMap);
     
-          crRouteControls.push(routeControl);
-    
-          routeControl.on('routesfound', function(e) {
-            console.log(`🛣️ RUTA ENCONTRADA (OSRM) para ${ruta.origen.nombre}`);
-            
-            // Esta validación ahora debería pasar siempre
-            if (!e.routes || e.routes.length === 0 || !e.routes[0].line) {
-               console.error(`❌ ERROR: OSRM devolvió una ruta para [${ruta.origen.nombre}] pero sin 'line'.`, e);
-               resolve(); 
-               return; 
-            }
+    // 5. ✅ NUEVA FUNCIÓN: Poblar la lista de la derecha (de /prioridad)
+    function poblarListaPrioridad(ubicacionesP) {
+      const lista = document.getElementById('lista-prioridad'); // <-- ID Correcto
+      if (!lista) return;
 
-            const line = e.routes[0].line; // ¡Ahora 'line' SÍ existe!
-            line.data = ruta;
-            line.on('click', (event) => handleRutaClick(event.target.data));
-            line.bindTooltip(`Ruta de ${ruta.origen.nombre} a ${ruta.destino.nombre}`, { sticky: true });
-            
-            resolve(); 
-          });
-    
-          routeControl.on('routingerror', function(e) {
-            console.error(`❌ ERROR DE RUTEO (OSRM) para ${ruta.origen.nombre}:`, e.error);
-            resolve(); 
-          });
-        });
+      lista.innerHTML = ''; // Limpiar lista
+      
+      if (ubicacionesP.length === 0) {
+        lista.innerHTML = '<p class="text-muted small p-2">Cola de prioridad está vacía.</p>';
+        return;
       }
-    
-      console.log("✅ 7. trazarRutas() - Todas las rutas han sido procesadas.");
+      
+      ubicacionesP.forEach((u, index) => {
+        const li = document.createElement('a');
+        li.href = '#';
+        li.className = 'list-group-item list-group-item-action';
+        li.dataset.ubicacionId = u.id; // Guardamos el ID
+        
+        li.innerHTML = `
+          <strong>${index + 1}. ${u.nombre}</strong>
+          <span class="badge ${getRiskBadgeClass(u.nivelRiesgo)} float-end" style="margin-left: 5px;">${u.nivelRiesgo}</span>
+          <br>
+          <span class="small-muted">Personas: ${u.personasAfectadas}</span>
+        `;
+        
+        // ✅ Conectar el clic de la lista al mapa
+        li.addEventListener('click', (e) => {
+          e.preventDefault();
+          handleListItemClick(u);
+        });
+        
+        lista.appendChild(li);
+      });
+      console.log(`📋 8. poblarListaPrioridad() - ${ubicacionesP.length} ítems de prioridad poblados.`);
     }
-      */
-    // (Tu función 'handleRutaClick' y 'limpiarRutas' están perfectas, no las toques)
-    // 4. ESTA ES LA FUNCIÓN DE EVENTO DE CLIC
+
+    // 6. ✅ FUNCIÓN MODIFICADA: Handler para clic en la LISTA
+    function handleListItemClick(ubicacion) {
+      console.log("Clic en LISTA para Ubicacion ID:", ubicacion.id);
+
+      // Buscar el marcador en el mapa que corresponde a esta ubicacion
+      const marker = crMarkers.find(m => m.data.id === ubicacion.id);
+
+      if (marker) {
+        // Centra el mapa y hace zoom
+        crMap.flyTo(marker.getLatLng(), 15); 
+        marker.openPopup();
+      }
+      
+      highlightListItem(ubicacion.id);
+    }
+    
+    // 7. ✅ NUEVA FUNCIÓN: Handler para clic en el MARCADOR
+    function handleMarkerClick(ubicacion) {
+      console.log("Clic en MARCADOR para Ubicacion ID:", ubicacion.id);
+      highlightListItem(ubicacion.id);
+    }
+
+    // 8. FUNCIÓN MODIFICADA: Handler para clic en la RUTA (Polyline)
     function handleRutaClick(ruta) {
-      console.log("Ruta clickeada:", ruta);
+      console.log("Clic en MAPA para Ruta ID:", ruta.id);
+      
+      // Resaltar la línea (buscándola por si acaso)
+      const polyline = crRouteControls.find(linea => linea.data.id === ruta.id);
+      if (polyline) {
+        highlightPolyline(polyline);
+      }
+      
+      // Ya no resalta la lista, solo muestra el popup
       Swal.fire({
         title: 'Detalle de la Ruta',
         html: `
@@ -613,26 +597,55 @@
       });
     }
 
-    // 5. Función para limpiar el mapa
-    function limpiarRutas() {
-      crRouteControls.forEach(control => {
-        if(crMap) crMap.removeControl(control);
+    // 9. ✅ NUEVAS FUNCIONES AYUDANTES (Helpers)
+    function highlightListItem(ubicacionId) {
+      document.querySelectorAll('#lista-prioridad .list-group-item').forEach(item => {
+        item.classList.remove('active');
       });
-      crRouteControls = []; 
+      const itemSeleccionado = document.querySelector(`#lista-prioridad [data-ubicacion-id="${ubicacionId}"]`);
+      if (itemSeleccionado) {
+        itemSeleccionado.classList.add('active');
+        itemSeleccionado.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    let selectedPolyline = null;
+    function highlightPolyline(polyline) {
+      if (selectedPolyline) {
+        selectedPolyline.setStyle({ color: 'blue', opacity: 0.7, weight: 5 });
+      }
+      polyline.setStyle({ color: 'red', opacity: 1.0, weight: 7 });
+      polyline.bringToFront();
+      selectedPolyline = polyline;
     }
     
-    // --- (AQUÍ VA EL RESTO DE TU CÓDIGO JS) ---
-    // ... (connectWebSocket, addLog, loadRecursos, initInteractiveMap, loadZonas, etc.) ...
-    
-    // (Pego el resto de tu código para asegurar que esté completo)
+    function getRiskBadgeClass(riesgo) {
+      if (riesgo === 'CRITICO' || riesgo === 'ALTO') return 'badge-risk-high text-white'; // Añadido text-white
+      if (riesgo === 'MEDIO') return 'badge-risk-medium';
+      return 'badge-risk-low text-white'; // Añadido text-white
+    }
 
-    // WebSocket STOMP (simulado)
+    // 10. ✅ FUNCIÓN MODIFICADA: Limpiar
+    function limpiarRutasYLista() {
+      crRouteControls.forEach(linea => {
+        if(crMap) crMap.removeLayer(linea);
+      });
+      crRouteControls = [];
+      selectedPolyline = null;
+      
+      const lista = document.getElementById('lista-prioridad'); // <-- ID Correcto
+      if (lista) {
+        lista.innerHTML = '<p class="text-muted small p-2">Cargando...</p>';
+      }
+    }
+    
+    // --- (AQUÍ VA EL RESTO DE TU CÓDIGO JS, SIN CAMBIOS) ---
+    
     function connectWebSocket() {
       console.log("Intentando conectar WebSocket...");
-      // document.getElementById('wsStatus').textContent = 'WS: conectado'; // Comentado por si falla
+      // document.getElementById('wsStatus').textContent = 'WS: conectado';
     }
 
-    // Log de acciones
     function addLog(text) {
       const li = document.createElement('li');
       li.className = 'list-group-item';
@@ -641,7 +654,6 @@
       if (list) list.prepend(li);
     }
 
-    // Cargar recursos (solo contador totalResources)
     function loadRecursos() {
       fetch(apiBase + '/recursos')
         .then(r => r.json())
@@ -658,13 +670,11 @@
         .catch(e => console.warn('No se pudo cargar recursos', e));
     }
     
-    // Declarar las capas del mapa interactivo (pestaña "Mapa")
     let map;
     let zonasLayer;
     let rutasLayer;
 
     function initInteractiveMap() {
-        // Verifica si el div 'map' existe antes de crear el mapa
         if (!document.getElementById('map')) return; 
         map = L.map('map').setView([4.5709, -74.2973], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -674,7 +684,6 @@
         rutasLayer = L.layerGroup().addTo(map);
     }
     
-    // Cargar zonas (para la tabla de inicio y el mapa interactivo)
     function loadZonas() {
       fetch(apiBase + '/zonas')
         .then(r => r.json())
@@ -696,20 +705,13 @@
             tr.innerHTML = `
               <td>${z.nombre}</td>
               <td>${z.tipo}</td>
-              <td><span class="badge ${
-                z.nivelRiesgo === 'CRITICO' || z.nivelRiesgo === 'ALTO'
-                  ? 'badge-risk-high'
-                  : z.nivelRiesgo === 'MEDIO'
-                    ? 'badge-risk-medium'
-                    : 'badge-risk-low'
-              }">${z.nivelRiesgo}</span></td>
+              <td><span class="badge ${getRiskBadgeClass(z.nivelRiesgo)}">${z.nivelRiesgo}</span></td>
               <td>${z.personasAfectadas}</td>
               <td>${z.recursosNecesarios?.length || 0}</td>
               <td>${new Date(z.updatedAt || Date.now()).toLocaleString()}</td>
               <td><button class="btn btn-sm btn-outline-secondary" data-id="${z.id}">Ver</button></td>`;
             tbody.appendChild(tr);
 
-            // Añadir al mapa interactivo (pestaña "Mapa")
             if (zonasLayer && z.lat && z.lng) {
               const m = L.circleMarker([z.lat, z.lng], { radius: 8 })
                 .bindPopup(`<strong>${z.nombre}</strong><br/>Riesgo: ${z.nivelRiesgo}<br/>Personas: ${z.personasAfectadas}`);
@@ -733,7 +735,6 @@
         .catch(e => console.warn('No se pudo cargar zonas', e));
     }
 
-    // Click en "Ver" zona tabla
     const tbodyZonas = document.querySelector('#tabla-zonas tbody');
     if (tbodyZonas) {
       tbodyZonas.addEventListener('click', (e) => {
@@ -764,9 +765,6 @@
       });
     }
 
-    // ==========================
-    //   Cargar RUTAS (para la pestaña "Mapa")
-    // ==========================
     function loadRutas() {
       fetch(apiBase + '/rutas')
         .then(r => r.json())
@@ -787,9 +785,6 @@
         .catch(e => console.warn('No se pudo cargar rutas', e));
     }
 
-    // ===============================
-    //   Cargar usuario actual (navbar)
-    // ===============================
     function cargarUsuarioActual() {
       const userSpan = document.getElementById("currentUser");
       if (!userSpan) return;
@@ -812,9 +807,6 @@
         });
     }
 
-    // =======================
-    //  LOGOUT / CERRAR SESIÓN
-    // =======================
     function configurarLogout() {
       const logoutLink = document.getElementById('menu-logout');
       if (logoutLink) {
@@ -844,9 +836,6 @@
       }
     }
 
-    // =======================
-    //  INICIALIZACIÓN FRONT
-    // =======================
     window.addEventListener('load', () => {
       initInteractiveMap(); // Inicializa el mapa de la pestaña "Mapa"
       loadRecursos();
@@ -862,7 +851,7 @@
           loadZonas();
           loadRutas();
           if (document.getElementById('panel-rutas').classList.contains('active')) {
-            loadUbicacionesYRutas();
+            loadAllData(); // <-- MODIFICADO
           }
           addLog('Datos refrescados manualmente');
         });

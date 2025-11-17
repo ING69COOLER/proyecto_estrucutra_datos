@@ -11,9 +11,10 @@ import co.proyecto.model.Ruta;
 import co.proyecto.model.Ubicacion;
 import co.proyecto.repository.RutaRepository;
 import co.proyecto.repository.UbicacionRepository;
+import jakarta.annotation.PostConstruct;
 
 @Component
-public class Grafo <T extends Comparable>{
+public class Grafo {
     //composicion
     private LinkedList<Ubicacion> nodos;
     private LinkedList<Ruta> aristas;
@@ -31,6 +32,27 @@ public class Grafo <T extends Comparable>{
         this.ubicacionRepository = ubicacionRepository;
         nodos = new LinkedList<>();
         aristas = new LinkedList<>();
+    }
+
+    @PostConstruct
+    public void init(){
+        actualizarGrafo();
+        System.out.println("se inicializo el grafo con cosas ya creadas");
+    }
+
+
+    public void actualizarGrafo() {
+        System.out.println("--- @PostConstruct: Cargando datos en el Grafo Singleton... ---");
+        try {
+            cargarTodo();
+            // Opcional: Calcular Warshall de una vez
+            encontrarCaminoCortoWarshall(); 
+            System.out.println("--- GRAFO CARGADO. Nodos: " + nodos.size() + " | Aristas: " + aristas.size() + " ---");
+            imprimirWarshall(); // Imprime la matriz al arrancar
+        } catch (Exception e) {
+            System.err.println(" error al inicializar grafo: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     
