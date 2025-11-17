@@ -431,7 +431,10 @@
 
         clearPathLayers();
         const bounds = [];
-        const palette = ['blue','green','purple','orange','red','teal','magenta'];
+        const palette = ['blue','green','purple','orange','teal','magenta'];
+
+        // Determinar la distancia mínima (si hay múltiples caminos por compatibilidad)
+        const minDist = caminos.length > 0 ? Math.min(...caminos.map(c => (c.distanciaMinima != null ? c.distanciaMinima : Infinity))) : Infinity;
 
         caminos.forEach((cam, idx) => {
           const ubicaciones = cam.caminoUbicaciones || [];
@@ -440,10 +443,14 @@
             .map(u => [u.lat, u.lng]);
 
           if (latlngs.length < 2) return;
+          // Si este camino es el más corto, resaltarlo en rojo y más grueso
+          const isShortest = (cam.distanciaMinima != null && cam.distanciaMinima === minDist);
+          const color = isShortest ? '#d9534f' : palette[idx % palette.length];
+          const weight = isShortest ? 7 : 4;
+          const opacity = isShortest ? 1.0 : 0.85;
 
-          const color = palette[idx % palette.length];
-          const pl = L.polyline(latlngs, { color, weight: 4, opacity: 0.85 }).addTo(crMap);
-          pl.bindPopup(`<b>Origen:</b> ${cam.origen?.nombre || 'N/A'}<br/><b>Distancia:</b> ${cam.distanciaMinima?.toFixed(2) || 'N/A'} km`);
+          const pl = L.polyline(latlngs, { color, weight, opacity }).addTo(crMap);
+          pl.bindPopup(`<b>Origen:</b> ${cam.origen?.nombre || 'N/A'}<br/><b>Distancia:</b> ${cam.distanciaMinima?.toFixed(2) || 'N/A'} km${isShortest ? ' <br><i>(camino más corto)</i>' : ''}`);
           crPathLayers.push(pl);
           latlngs.forEach(p => bounds.push(p));
         });

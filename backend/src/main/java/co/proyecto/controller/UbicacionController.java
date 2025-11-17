@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -108,7 +110,19 @@ public class UbicacionController {
             return ubicacionRepository.findById(id)
                     .map(ubicacion -> {
                         List<co.proyecto.dto.CaminoResultante> resultados = grafo.getRutasDestino(ubicacion);
-                        return ResponseEntity.ok(resultados);
+
+                        // Elegir el camino con menor distancia entre todos los orígenes
+                        co.proyecto.dto.CaminoResultante masCorto = resultados.stream()
+                                .min(Comparator.comparingDouble(co.proyecto.dto.CaminoResultante::getDistanciaMinima))
+                                .orElse(null);
+
+                        if (masCorto == null) {
+                            // No hay caminos desde ningún origen hacia el destino
+                            return ResponseEntity.status(404).body("No se encontró ningún camino hacia la ubicación destino");
+                        }
+
+                        // Devolver un arreglo con el único camino más corto (compatibilidad frontend)
+                        return ResponseEntity.ok(Collections.singletonList(masCorto));
                     })
                     .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
