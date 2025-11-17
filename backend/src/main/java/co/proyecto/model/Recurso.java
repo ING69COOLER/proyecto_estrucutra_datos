@@ -1,5 +1,7 @@
 package co.proyecto.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -17,6 +19,7 @@ public class Recurso {
     // 🔹 Relación con Ubicacion (muchos recursos pertenecen a una ubicación)
     @ManyToOne
     @JoinColumn(name = "ubicacion_id") // crea la columna ubicacion_id en la tabla recurso
+    @JsonIgnore
     private Ubicacion ubicacion;
 
     // --- Getters y Setters ---
