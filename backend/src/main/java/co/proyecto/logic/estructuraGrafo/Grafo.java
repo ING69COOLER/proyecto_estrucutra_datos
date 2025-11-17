@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import co.proyecto.dto.CaminoResultante;
 import co.proyecto.model.Ruta;
 import co.proyecto.model.Ubicacion;
 import co.proyecto.repository.RutaRepository;
@@ -58,14 +59,81 @@ public class Grafo {
     
     public void cargarTodo(){
 
-        List<Ruta> rutas = rutaRepository.findAll();
+        List<Ruta> rutas = rutaRepository.findAllWithUbicaciones();
         aristas = new LinkedList<>(rutas);
         
-        List<Ubicacion> ubicaciones = ubicacionRepository.findAll();
+        List<Ubicacion> ubicaciones = ubicacionRepository.findAllWithRecursos();
         nodos = new LinkedList<>(ubicaciones); 
 
         actualizarMatrizAdyacencia();
        
+    }
+
+    public List<CaminoResultante> getRutasDestino(Ubicacion destinoUbicacion) {
+    
+    // 1. Encontrar el índice de la matriz del destino
+    //    Esto funciona gracias a que implementaste correctamente .equals() y .hashCode() por ID.
+        int destinoIndex = nodos.indexOf(destinoUbicacion);
+
+        if (destinoIndex == -1) {
+            throw new IllegalArgumentException("La ubicación de destino " + destinoUbicacion.getNombre() + " no está en el grafo.");
+        }
+
+        List<CaminoResultante> resultados = new ArrayList<>();
+        int n = nodos.size();
+
+        // 2. Iterar por todos los posibles orígenes (filas de la matriz)
+        for (int origenIndex = 0; origenIndex < n; origenIndex++) {
+            // Saltar el camino a sí mismo
+            if (origenIndex == destinoIndex) continue; 
+
+            // Obtener la distancia (el valor de la matriz)
+            double distancia = caminoCortoWarshall[origenIndex][destinoIndex];
+
+            // 3. Si existe un camino (no es infinito)
+            if (distancia != Double.POSITIVE_INFINITY) {
+            
+                CaminoResultante resultado = new CaminoResultante();
+            
+            // Llenar el DTO
+                resultado.setOrigen(nodos.get(origenIndex));  // El objeto Ubicacion completo
+                resultado.setDestino(destinoUbicacion);      // El objeto Ubicacion destino
+                resultado.setDistanciaMinima(distancia); 
+            
+            // 4. Reconstruir el path completo (lista de objetos Ubicacion)
+                resultado.setCaminoUbicaciones(reconstruirCaminoUbicaciones(origenIndex, destinoIndex));
+            
+                resultados.add(resultado);
+            }
+        }
+
+        return resultados;
+    }
+
+    private List<Ubicacion> reconstruirCaminoUbicaciones(int i, int j) {
+        
+        List<Ubicacion> path = new LinkedList<>();
+        int intermedio = recorridoCortoWarshall[i][j];
+
+        if (intermedio != 0) { // Si hay un nodo intermedio
+        
+        // 1. Path de I al Intermedio (k)
+            path.addAll(reconstruirCaminoUbicaciones(i, intermedio));
+        
+        // 2. Eliminar el nodo duplicado que se agregó en la recursión anterior
+        //    (Es la Ubicacion 'intermedio' que ya está al final del primer path)
+            path.remove(path.size() - 1); 
+        
+        // 3. Path del Intermedio (k) a J
+            path.addAll(reconstruirCaminoUbicaciones(intermedio, j));
+    
+        } else {
+        // Base case: Si no hay intermedio (camino directo)
+            path.add(nodos.get(i)); // Origen
+            path.add(nodos.get(j)); // Destino
+        }
+    
+        return path;
     }
     
 

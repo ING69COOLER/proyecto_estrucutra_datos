@@ -245,6 +245,12 @@
                     <label class="form-label">Cantidad</label>
                     <input id="r_cantidad" type="number" class="form-control form-control-sm" value="1" />
                   </div>
+                  <div class="mb-2">
+                    <label class="form-label">Ubicación de Destino</label>
+                    <select required id="r_ubicacion_select" class="form-select form-select-sm">
+                      <option value="">Cargando ubicaciones...</option>
+                    </select>
+                  </div>
                   <div class="d-grid">
                     <button class="btn btn-success btn-sm" type="submit">Crear Recurso</button>
                   </div>
@@ -704,6 +710,11 @@
     // ───────────────────────────────────────────
     //  INICIALIZAR MAPA SOLO EN ESTA PESTAÑA
     // ───────────────────────────────────────────
+      
+      if (tab === "panel-admin") {
+        populateLocationDropdown(); 
+      }
+
       if (tab === "crear-ubicacion") {
         setTimeout(() => {
           if (!cuMap) {
@@ -1049,25 +1060,82 @@ async function guardarRuta() {
       list.prepend(li);
     }
 
+    
     // Crear recurso
-    document.getElementById('form-create-resource').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const nombre = document.getElementById('r_nombre').value;
-      const tipo = document.getElementById('r_tipo').value;
-      const cantidad = +document.getElementById('r_cantidad').value;
+  // Reemplaza el manejador document.getElementById('form-create-resource').addEventListener('submit', (e) => {...})
 
-      fetch(apiBase + '/recursos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, tipo, cantidad })
-      })
-        .then(r => r.json())
-        .then(data => {
-          addLog('Recurso creado: ' + data.nombre);
-          loadRecursos();
-        })
-        .catch(err => { console.error(err); addLog('Error creando recurso'); });
+document.getElementById('form-create-resource').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const nombre = document.getElementById('r_nombre').value;
+  const tipo = document.getElementById('r_tipo').value;
+  const cantidad = +document.getElementById('r_cantidad').value;
+  
+  // ✅ CAMBIO CLAVE: Leer el ID directamente del valor seleccionado
+  const ubicacionId = document.getElementById('r_ubicacion_select').value; 
+
+  if (!ubicacionId) {
+    Swal.fire('Error', 'Debe seleccionar una ubicación de destino.', 'warning');
+    return;
+  }
+  
+  // ✅ PAYLOAD CORREGIDO: Usamos el ID del selector
+  const payload = { 
+    nombre, 
+    tipo, 
+    cantidad, 
+    ubicacion: { id: +ubicacionId } // Convertir el string del selector a número
+  };
+
+  fetch(apiBase + '/recursos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(r => {
+      if (!r.ok) {
+        throw new Error(`HTTP error! status: ${r.status}`);
+      }
+      return r.json();
+    })
+    .then(data => {
+      addLog('Recurso creado: ' + data.nombre + ' en Ubi ID: ' + ubicacionId);
+      loadRecursos(); // Refresca la tabla de recursos
+      Swal.fire('Éxito', 'Recurso creado y asignado.', 'success');
+    })
+    .catch(err => { 
+      console.error(err); 
+      addLog('Error creando recurso. Revisar backend.'); 
+      Swal.fire('Error', 'Error al crear o asignar el recurso. Verifique la conexión.', 'error');
     });
+});
+  // Añadir en el bloque <script> principal
+
+/**
+ * Carga todas las ubicaciones y llena el menú desplegable.
+ */
+async function populateLocationDropdown() {
+    const select = document.getElementById('r_ubicacion_select');
+    if (!select) return;
+
+    try {
+        const res = await fetch(apiBase + '/zonas');
+        const ubicaciones = await res.json();
+        
+        select.innerHTML = '<option value="">Selecciona una ubicación</option>'; // Opción por defecto
+        
+        ubicaciones.forEach(u => {
+            const option = document.createElement('option');
+            // Guardamos el ID como valor, el nombre como texto visible
+            option.value = u.id; 
+            option.textContent = `ID ${u.id}: ${u.nombre} (${u.nivelRiesgo})`;
+            select.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error('Error cargando ubicaciones para el dropdown:', error);
+        select.innerHTML = '<option value="">Error al cargar ubicaciones</option>';
+    }
+}
 
     // Crear ubicación
     document.getElementById("form-create-ubicacion").addEventListener("submit", async (event) => {

@@ -486,6 +486,40 @@
         console.log(`🖌️ 5. pintarMarcadores() - ${ubicaciones.length} marcadores pintados.`);
     }
 
+    // En tu bloque <script> principal
+
+      // La función original de limpieza
+    function limpiarRutasYLista() {
+    // 1. Limpiar líneas de rutas (el array crRouteControls)
+      crRouteControls.forEach(linea => {
+          if(crMap) crMap.removeLayer(linea); 
+      });
+      crRouteControls = [];
+    
+      // 2. ✅ AHORA TAMBIÉN LLAMA AL BORRADO DE MARCADORES
+      limpiarMarcadores(); // <-- NUEVA LÍNEA
+
+      // 3. Limpiar el resto de variables y la lista HTML
+      selectedPolyline = null;
+      const lista = document.getElementById('lista-prioridad');
+      if (lista) {
+          lista.innerHTML = '<p class="text-muted small p-2">Cargando...</p>';
+      }
+    }
+
+    /**
+    * Borra todos los marcadores (puntos/ubicaciones) del mapa.
+    */
+    function limpiarMarcadores() {
+      // La capa 'crMarkersLayer' contiene todos los marcadores.
+        if (crMarkersLayer) {
+            crMarkersLayer.clearLayers();
+        }
+        // También reseteamos el array de búsqueda
+        crMarkers = [];
+        console.log("🗑️ Marcadores borrados del mapa.");
+    }
+
     // 4. Función para trazar todas las rutas (Versión Línea Recta)
     function trazarRutas(rutas) {
       console.log(`🚗 6. trazarRutas() - Dibujando ${rutas.length} rutas (línea recta).`);
