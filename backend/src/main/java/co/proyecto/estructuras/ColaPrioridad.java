@@ -31,7 +31,7 @@ public class ColaPrioridad {
     }
 
     public void cargarTodo(){
-        List<Ubicacion> ubicaciones = ubicacionRepository.findAll();
+        List<Ubicacion> ubicaciones = ubicacionRepository.findAllWithRecursos();
         for (Ubicacion ubicacion : ubicaciones) {
             add(ubicacion);
         }

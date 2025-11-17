@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface UbicacionRepository extends JpaRepository<Ubicacion, Integer> {
 
@@ -18,6 +19,8 @@ public interface UbicacionRepository extends JpaRepository<Ubicacion, Integer> {
 
     List<Ubicacion> findByNombre(String nombre);
 
-    
-
+    @Query("SELECT u FROM Ubicacion u " +
+           "LEFT JOIN FETCH u.recursosNecesarios " + // List
+           "LEFT JOIN FETCH u.recursosDisponibles")  // Set (Ahora funciona)
+    List<Ubicacion> findAllWithRecursos();
 }

@@ -4,6 +4,7 @@ import co.proyecto.estructuras.ColaPrioridad;
 import co.proyecto.model.Ubicacion;
 import co.proyecto.repository.UbicacionRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -23,9 +24,10 @@ public class UbicacionController {
     }
     //obtiene todas las ubicaciones
     @GetMapping
+    @Transactional
     public ResponseEntity<List<Ubicacion>> getAll() {
         try {
-            List<Ubicacion> ubicaciones = ubicacionRepository.findAll();
+            List<Ubicacion> ubicaciones = ubicacionRepository.findAllWithRecursos();
             System.out.println("/*/*/*/////*/*/*/*//*/*/**/*/*///*/*/***/*/*/*/*/");
             for (Ubicacion ubicacion : ubicaciones) {
                 System.out.println(ubicacion.toString());
@@ -86,6 +88,7 @@ public class UbicacionController {
     }
 
     @GetMapping("/prioridad")
+    @Transactional
     public ResponseEntity<List<Ubicacion>> getPriority(){
         List<Ubicacion> ubicacionesP = new ArrayList<>();
         while (colaPrioridad.peek() != null) {

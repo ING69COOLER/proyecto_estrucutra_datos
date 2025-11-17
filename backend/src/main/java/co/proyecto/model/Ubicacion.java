@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.Objects;
-
+import java.util.Set;
 import java.util.Date;
 
 
@@ -44,7 +44,8 @@ public class Ubicacion implements Comparable<Ubicacion> {
     private List<Recurso> recursosNecesarios;
 
     @OneToMany(mappedBy = "ubicacion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Recurso> recursosDisponibles;
+    private Set<Recurso> recursosDisponibles;
+    
 
     @JsonIgnore
     @OneToMany(mappedBy = "origen")
@@ -148,11 +149,11 @@ public class Ubicacion implements Comparable<Ubicacion> {
         this.recursosNecesarios = recursosNecesarios;
     }
 
-    public List<Recurso> getRecursosDisponibles() {
+    public Set<Recurso> getRecursosDisponibles() {
         return recursosDisponibles;
     }
 
-    public void setRecursosDisponibles(List<Recurso> recursosDisponibles) {
+    public void setRecursosDisponibles(Set<Recurso> recursosDisponibles) {
         this.recursosDisponibles = recursosDisponibles;
     }
 
