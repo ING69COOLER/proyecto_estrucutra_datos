@@ -108,9 +108,6 @@
             <a href="#" class="list-group-item list-group-item-action active" data-tab="inicio">Inicio</a>
             <!-- 👇 NUEVO: Panel Rutas visible para OPERADOR -->
             <a href="#" class="list-group-item list-group-item-action" data-tab="panel-rutas">Panel Rutas</a>
-            <a href="#" class="list-group-item list-group-item-action" data-tab="estadisticas">Estadísticas</a>
-            <a href="#" class="list-group-item list-group-item-action" data-tab="mapa">Mapa Interactivo</a>
-            <a href="#" class="list-group-item list-group-item-action" data-tab="simulador">Simulador</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
             <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">
               Salir (apagar demo)
@@ -232,104 +229,9 @@
           </div>
         </section>
 
-        <!-- ESTADÍSTICAS -->
-        <section id="estadisticas" class="tab-section">
-          <div class="card p-3">
-            <h5>Estadísticas y Reportes</h5>
-            <p class="small-muted">Gráficas del avance de las evacuaciones, distribución de recursos y tiempos de llegada.</p>
+        <!-- Estadísticas y Mapa eliminados para versión Operador simplificada -->
 
-            <div class="row">
-              <div class="col-md-6">
-                <canvas id="chart-evacuaciones" height="200"></canvas>
-              </div>
-              <div class="col-md-6">
-                <canvas id="chart-recursos" height="200"></canvas>
-              </div>
-            </div>
-
-            <hr>
-            <h6>Descargar reportes</h6>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-primary btn-sm" id="btn-download-report-pdf">Descargar PDF</button>
-              <button class="btn btn-outline-secondary btn-sm" id="btn-download-report-csv">Exportar CSV</button>
-            </div>
-
-          </div>
-        </section>
-
-        <!-- MAPA -->
-        <section id="mapa" class="tab-section">
-          <div class="card p-3">
-            <h5>Mapa Interactivo</h5>
-            <p class="small-muted">Visualiza zonas, rutas y zonas de evacuación. Pincha una zona para ver detalles y acciones.</p>
-
-            <div id="map" class="mb-3"></div>
-
-            <div class="row">
-              <div class="col-md-4">
-                <h6>Detalle Zona</h6>
-                <div id="detalleZona">
-                  <p><strong>Nombre:</strong> <span id="dz_nombre">-</span></p>
-                  <p><strong>Nivel Riesgo:</strong> <span id="dz_riesgo">-</span></p>
-                  <p><strong>Personas:</strong> <span id="dz_personas">-</span></p>
-                  <p><strong>Recursos:</strong> <span id="dz_recursos">-</span></p>
-                  <div class="d-grid">
-                    <button class="btn btn-danger btn-sm" id="btn-evacuar-zona">Iniciar Evacuación</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-8">
-                <h6>Controles de Mapa</h6>
-                <div class="mb-2">
-                  <label class="form-label">Mostrar:</label>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="chkMostrarRutas" checked>
-                    <label class="form-check-label">Rutas</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="chkMostrarZonas" checked>
-                    <label class="form-check-label">Zonas</label>
-                  </div>
-                </div>
-                <small class="text-muted">Zoom y desplazamiento manual disponibles.</small>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SIMULADOR -->
-        <section id="simulador" class="tab-section">
-          <div class="card p-3">
-            <h5>Simulador de Evacuación y Transporte</h5>
-            <p class="small-muted">Ejecuta simulaciones paso a paso, controla velocidad y observa asignación de recursos y rutas.</p>
-
-            <div class="row g-3">
-              <div class="col-md-4">
-                <label class="form-label">Seleccionar escenario</label>
-                <select id="sim_scenario" class="form-select form-select-sm">
-                  <option value="default">Escenario por defecto</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Velocidad (ms paso)</label>
-                <input id="sim_speed" type="range" min="100" max="2000" step="100" value="500" class="form-range" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">&nbsp;</label>
-                <div class="d-grid">
-                  <button id="sim_start" class="btn btn-success btn-sm">Iniciar Simulación</button>
-                  <button id="sim_pause" class="btn btn-warning btn-sm mt-1">Pausar</button>
-                  <button id="sim_stop" class="btn btn-danger btn-sm mt-1">Detener</button>
-                </div>
-              </div>
-            </div>
-
-            <hr>
-            <h6>Cola de prioridad (evacuaciones)</h6>
-            <ul id="priorityQueue" class="list-group"></ul>
-          </div>
-        </section>
+        <!-- Simulador eliminado en versión Operador -->
 
         <!-- CARGA DE DATOS -->
         <section id="carga-datos" class="tab-section">
