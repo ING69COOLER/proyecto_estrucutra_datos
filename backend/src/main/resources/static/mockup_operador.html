@@ -222,8 +222,19 @@
               <h4 class="mb-3">Ubicaciones Prioritarias</h4>
               <p class="text-muted small">Ubicaciones ordenadas por la cola de prioridad del backend (de mayor a menor urgencia).</p>
               
-              <div class="list-group" id="lista-prioridad" style="max-height: 700px; overflow-y: auto;">
+              <!-- Selector destino para trazar caminos -->
+              <div class="mb-2">
+                <label class="form-label">Destino para trazado</label>
+                <div class="input-group">
+                  <select id="selectDestinoPaths" class="form-select form-select-sm">
+                    <option value="">Cargando destinos...</option>
+                  </select>
+                  <button id="btn-trazar-caminos" class="btn btn-sm btn-primary">Trazar</button>
                 </div>
+              </div>
+
+              <div class="list-group" id="lista-prioridad" style="max-height: 600px; overflow-y: auto;">
+              </div>
             </div>
 
           </div>
@@ -285,6 +296,7 @@
     let crMarkersLayer = L.layerGroup(); // Capa para los marcadores
     let crMarkers = []; // Array para 'buscar' marcadores (Marker Lookup)
     let crMapInitialized = false; 
+    let crPathLayers = []; // Polylines generadas al trazar caminos hacia un destino
 
     // =============================
     //  NAVEGACIÓN DE PESTAÑAS
@@ -305,6 +317,8 @@
           console.log("▶️ Detectado clic en 'Panel Rutas', iniciando mapa...");
           initCrearRutaMap();
           crMapInitialized = true;
+          // Llenar dropdown de destinos una vez que el mapa de rutas se inicializa
+          setTimeout(populateDestinationDropdownForPaths, 200);
         } else if (tab === 'panel-rutas') {
            console.log("▶️ Entrando a 'Panel Rutas' (mapa ya inicializado). Refrescando tamaño.");
            setTimeout(() => crMap.invalidateSize(), 150);
@@ -386,6 +400,90 @@
           crMap.fitBounds(bounds, { padding: [50, 50] });
         }
         console.log(`🖌️ 5. pintarMarcadores() - ${ubicaciones.length} marcadores pintados.`);
+    }
+
+    // ----- Manejo de caminos desde varios orígenes hasta un destino -----
+    function clearPathLayers() {
+      if (!crMap) return;
+      crPathLayers.forEach(l => { if (crMap && l) crMap.removeLayer(l); });
+      crPathLayers = [];
+    }
+
+    async function trazarCaminosHaciaDestino(destId) {
+      if (!destId) {
+        Swal.fire('Aviso', 'Selecciona un destino válido.', 'warning');
+        return;
+      }
+
+      try {
+        const res = await fetch(apiBase + '/zonas/caminos/' + destId);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || ('HTTP ' + res.status));
+        }
+
+        const caminos = await res.json();
+        if (!Array.isArray(caminos) || caminos.length === 0) {
+          Swal.fire('Información', 'No se encontraron caminos hacia ese destino.', 'info');
+          clearPathLayers();
+          return;
+        }
+
+        clearPathLayers();
+        const bounds = [];
+        const palette = ['blue','green','purple','orange','red','teal','magenta'];
+
+        caminos.forEach((cam, idx) => {
+          const ubicaciones = cam.caminoUbicaciones || [];
+          const latlngs = ubicaciones
+            .filter(u => u && u.lat && u.lng)
+            .map(u => [u.lat, u.lng]);
+
+          if (latlngs.length < 2) return;
+
+          const color = palette[idx % palette.length];
+          const pl = L.polyline(latlngs, { color, weight: 4, opacity: 0.85 }).addTo(crMap);
+          pl.bindPopup(`<b>Origen:</b> ${cam.origen?.nombre || 'N/A'}<br/><b>Distancia:</b> ${cam.distanciaMinima?.toFixed(2) || 'N/A'} km`);
+          crPathLayers.push(pl);
+          latlngs.forEach(p => bounds.push(p));
+        });
+
+        if (bounds.length > 0) crMap.fitBounds(bounds, { padding: [40, 40] });
+
+      } catch (error) {
+        console.error('Error trazando caminos:', error);
+        Swal.fire('Error', 'No se pudieron obtener los caminos: ' + error.message, 'error');
+      }
+    }
+
+    async function populateDestinationDropdownForPaths() {
+      const sel = document.getElementById('selectDestinoPaths');
+      if (!sel) return;
+      sel.disabled = true;
+      try {
+        const res = await fetch(apiBase + '/zonas');
+        if (!res.ok) {
+          sel.innerHTML = '<option value="">Error cargando destinos</option>';
+          return;
+        }
+        const list = await res.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          sel.innerHTML = '<option value="">No hay destinos</option>';
+          return;
+        }
+        sel.innerHTML = '<option value="">Selecciona un destino</option>';
+        list.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${u.nombre} (${u.nivelRiesgo || ''})`;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Error cargando destinos:', e);
+        sel.innerHTML = '<option value="">Error cargando destinos</option>';
+      } finally {
+        sel.disabled = false;
+      }
     }
 
     // En tu bloque <script> principal
@@ -789,6 +887,18 @@
             loadAllData(); // <-- MODIFICADO
           }
           addLog('Datos refrescados manualmente');
+        });
+      }
+
+      // Botón trazar caminos
+      const btnTrazar = document.getElementById('btn-trazar-caminos');
+      if (btnTrazar) {
+        btnTrazar.addEventListener('click', () => {
+          const sel = document.getElementById('selectDestinoPaths');
+          if (!sel) return;
+          const id = sel.value;
+          if (!id) { Swal.fire('Atención', 'Selecciona un destino', 'warning'); return; }
+          trazarCaminosHaciaDestino(id);
         });
       }
     });

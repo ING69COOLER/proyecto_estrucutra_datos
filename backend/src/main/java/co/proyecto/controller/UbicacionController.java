@@ -17,10 +17,13 @@ public class UbicacionController {
 
     private final UbicacionRepository ubicacionRepository;
     private final ColaPrioridad colaPrioridad;
+    private final co.proyecto.logic.estructuraGrafo.Grafo grafo;
 
-    public UbicacionController(UbicacionRepository ubicacionRepository, ColaPrioridad colaPrioridad) {
+    public UbicacionController(UbicacionRepository ubicacionRepository, ColaPrioridad colaPrioridad,
+                               co.proyecto.logic.estructuraGrafo.Grafo grafo) {
         this.ubicacionRepository = ubicacionRepository;
         this.colaPrioridad = colaPrioridad;
+        this.grafo = grafo;
     }
     //obtiene todas las ubicaciones
     @GetMapping
@@ -96,5 +99,21 @@ public class UbicacionController {
         }
         colaPrioridad.cargarTodo();
         return ResponseEntity.ok(ubicacionesP);
+    }
+
+    // Nuevo: obtener caminos desde todos los orígenes hacia una ubicación destino (usa el Grafo singleton)
+    @GetMapping("/caminos/{id}")
+    public ResponseEntity<?> getCaminosHaciaDestino(@PathVariable int id) {
+        try {
+            return ubicacionRepository.findById(id)
+                    .map(ubicacion -> {
+                        List<co.proyecto.dto.CaminoResultante> resultados = grafo.getRutasDestino(ubicacion);
+                        return ResponseEntity.ok(resultados);
+                    })
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Error al calcular caminos: " + e.getMessage());
+        }
     }
 }
