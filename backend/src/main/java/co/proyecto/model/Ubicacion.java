@@ -6,16 +6,17 @@ import java.util.List;
 import org.hibernate.internal.util.compare.ComparableComparator;
 // 👇 IMPORTS AÑADIDOS
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import java.util.Date;
 
 
-// 👇 ANOTACIÓN AÑADIDA
-@JsonIdentityInfo(
-    generator = ObjectIdGenerators.PropertyGenerator.class,
-    property = "id"
-)
+//// 👇 ANOTACIÓN AÑADIDA
+//@JsonIdentityInfo(
+  //  generator = ObjectIdGenerators.PropertyGenerator.class,
+    //property = "id"
+//)
 @Entity
 public class Ubicacion implements Comparable<Ubicacion>{
     @Id
@@ -44,9 +45,11 @@ public class Ubicacion implements Comparable<Ubicacion>{
     @OneToMany(mappedBy = "ubicacion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recurso> recursosDisponibles;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "origen")
     private List<Ruta> rutasOrigen;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "destino")
     private List<Ruta> rutasDestino;
 
@@ -155,12 +158,12 @@ public class Ubicacion implements Comparable<Ubicacion>{
         throw new UnsupportedOperationException("Unimplemented method 'compareTo'");
     }
 
+
     @Override
     public String toString() {
         return "Ubicacion [id=" + id + ", nombre=" + nombre + ", tipo=" + tipo + ", personasAfectadas="
                 + personasAfectadas + ", nivelRiesgo=" + nivelRiesgo + ", lat=" + lat + ", lng=" + lng + ", updatedAt="
-                + updatedAt + ", recursosNecesarios=" + recursosNecesarios + ", recursosDisponibles="
-                + recursosDisponibles + ", rutasOrigen=" + rutasOrigen + ", rutasDestino=" + rutasDestino + "]";
+                + updatedAt + "]";
     }
 
 }

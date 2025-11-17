@@ -22,11 +22,12 @@ public class Ruta implements Arista<Ubicacion> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER) 
     @JoinColumn(name = "origen_id", referencedColumnName = "id", nullable = false)
     private Ubicacion origen;   // referencia a entidad Ubicacion
 
-    @ManyToOne
+    
+    @ManyToOne(fetch = FetchType.EAGER) 
     @JoinColumn(name = "destino_id", referencedColumnName = "id", nullable = false)
     private Ubicacion destino;  // referencia a entidad Ubicacion
 

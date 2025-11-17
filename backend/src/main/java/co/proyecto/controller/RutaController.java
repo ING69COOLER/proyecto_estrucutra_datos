@@ -23,9 +23,11 @@ public class RutaController {
         this.rutaRepository = rutaRepository;
     }
 
-     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST})
+    @GetMapping
     public List<Ruta> getAll() {
-        return rutaRepository.findAll();
+        System.out.println("--- ¡SÍ ESTOY USANDO EL QUERY NUEVO (findAllWithUbicaciones)! ---");
+        //return rutaRepository.findAll();
+        return rutaRepository.findAllWithUbicaciones();
     }
 
    
