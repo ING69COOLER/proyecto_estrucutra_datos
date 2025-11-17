@@ -1,5 +1,6 @@
 package co.proyecto.controller;
 
+import co.proyecto.dto.CaminoResultante;
 import co.proyecto.dto.RutaRequest;
 import co.proyecto.logic.Clientes.RutaClient;
 import co.proyecto.logic.estructuraGrafo.Grafo;
@@ -32,7 +33,18 @@ public class RutaController {
         //return rutaRepository.findAll();
         return rutaRepository.findAllWithUbicaciones();
     }
+/* 
+    @GetMapping
+    public List<CaminoResultante> getRutasMinimasDesdeX(@RequestBody Ubicacion request) {
+        List<CaminoResultante> caminos = grafo.getRutasDestino(request);
 
+        for (CaminoResultante caminoResultante : caminos) {
+            
+        }
+
+
+    }
+*/
    /* 
     @PostMapping
     public Ruta create(@RequestBody Ruta ruta) {

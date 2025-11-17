@@ -87,6 +87,7 @@ public class PruebaGrafo {
         System.out.println("\n--- ARISTAS CARGADAS ---");
         this.grafo.imprimirAristasGrafo();
         
+        
         // Aquí podrías agregar tu test de getRutasDestino si quisieras.
     }
 
