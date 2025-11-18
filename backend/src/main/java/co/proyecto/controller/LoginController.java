@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import co.proyecto.logic.UsuarioService;
+import co.proyecto.logic.Clientes.GrafoSeeder;
 import co.proyecto.logic.Clientes.PruebaGrafo;
 import co.proyecto.model.Usuario;
 import co.proyecto.model.enums.Rol;
@@ -21,10 +22,12 @@ public class LoginController {
     private final UsuarioService usuarioService;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoginController.class);
     private final PruebaGrafo pruebasGrafo; // Spring inyectará
+    private final GrafoSeeder llenado;
 
-    public LoginController(UsuarioService usuarioService, PruebaGrafo pruebaGrafo) {
+    public LoginController(UsuarioService usuarioService, PruebaGrafo pruebaGrafo, GrafoSeeder llenado) {
         this.usuarioService = usuarioService;
         this.pruebasGrafo = pruebaGrafo;
+        this.llenado = llenado;
     }
 
     @GetMapping("/login")
@@ -39,7 +42,8 @@ public class LoginController {
                                 Model model) throws InterruptedException {
 
         
-        //pruebasGrafo.verificarGrafo();
+        ///lllennnnaaaaddddooooo de db //////////////////////////////////////////////////////////////////////////////////
+        //llenado.seedHugeGraph();
         
         Optional<Usuario> usuarioOpt = usuarioService.login(email, contrasena);
 
