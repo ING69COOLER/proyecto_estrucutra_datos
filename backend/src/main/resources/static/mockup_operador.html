@@ -108,6 +108,8 @@
             <a href="#" class="list-group-item list-group-item-action active" data-tab="inicio">Inicio</a>
             <!-- 👇 NUEVO: Panel Rutas visible para OPERADOR -->
             <a href="#" class="list-group-item list-group-item-action" data-tab="panel-rutas">Panel Rutas</a>
+            <!-- DESPUÉS de "Panel Rutas" -->
+            <a href="#" class="list-group-item list-group-item-action" data-tab="reportes-operador">Reportes</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
             <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">
               Salir (apagar demo)
@@ -264,6 +266,86 @@
           </div>
         </section>
 
+        <!-- ========================================
+             SECCIÓN: REPORTES (OPERADOR)
+        ========================================= -->
+        <section id="reportes-operador" class="tab-section">
+          <h4 class="mb-3">Reportes de Recursos</h4>
+          <p class="text-muted">Consulta el estado de recursos y zonas (solo lectura).</p>
+
+          <div class="row g-3">
+            
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Zonas Críticas</h6>
+                <p id="op_stat_criticas" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Total Distribuciones</h6>
+                <p id="op_stat_dist" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Recursos Distribuidos</h6>
+                <p id="op_stat_recursos" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Personas Afectadas</h6>
+                <p id="op_stat_personas" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="row g-3 mt-3">
+            
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Balance de Recursos</h5>
+                <canvas id="op-chart-recursos" style="max-height: 300px;"></canvas>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Distribución de Riesgos</h5>
+                <canvas id="op-chart-riesgos" style="max-height: 300px;"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card p-3 mt-3">
+            <h5>Historial Reciente de Distribuciones</h5>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped" id="op-tabla-historial">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Recurso</th>
+                    <th>Cantidad</th>
+                    <th>Distancia (km)</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Dinámico -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>
@@ -334,6 +416,12 @@
         } else if (tab === 'panel-rutas') {
            console.log("▶️ Entrando a 'Panel Rutas' (mapa ya inicializado). Refrescando tamaño.");
            setTimeout(() => crMap.invalidateSize(), 150);
+        }
+
+        if (tab === 'reportes-operador') {
+          setTimeout(() => {
+            cargarReportesOperador();
+          }, 100);
         }
       });
     });
@@ -908,6 +996,162 @@
             }
           });
         });
+      }
+    }
+
+    // ========================================
+    //   REPORTES PARA OPERADOR
+    // ========================================
+
+    let opChartRecursos = null;
+    let opChartRiesgos = null;
+
+    async function cargarReportesOperador() {
+      await cargarEstadisticasOperador();
+      await cargarGraficosOperador();
+      await cargarHistorialOperador();
+    }
+
+    async function cargarEstadisticasOperador() {
+      try {
+        // Zonas críticas
+        const resZonas = await fetch(apiBase + '/reportes/zonas-criticas');
+        const dataZonas = await resZonas.json();
+        
+        document.getElementById('op_stat_criticas').textContent = 
+          (dataZonas.distribucionRiesgo?.CRITICO || 0) + (dataZonas.distribucionRiesgo?.ALTO || 0);
+        
+        document.getElementById('op_stat_personas').textContent = 
+          dataZonas.totalPersonasAfectadas || 0;
+        
+        // Distribuciones
+        const resDist = await fetch(apiBase + '/reportes/distribuciones');
+        const dataDist = await resDist.json();
+        
+        document.getElementById('op_stat_dist').textContent = dataDist.totalDistribuciones || 0;
+        document.getElementById('op_stat_recursos').textContent = dataDist.totalRecursosDistribuidos || 0;
+        
+      } catch (error) {
+        console.error('Error cargando estadísticas operador:', error);
+      }
+    }
+
+    async function cargarGraficosOperador() {
+      try {
+        // Gráfico de recursos
+        const resRecursos = await fetch(apiBase + '/reportes/recursos-por-zona');
+        const dataRecursos = await resRecursos.json();
+        
+        const labels = [...new Set(dataRecursos.map(r => r.ubicacionNombre))].slice(0, 8);
+        const disponibles = labels.map(label => {
+          return dataRecursos
+            .filter(r => r.ubicacionNombre === label)
+            .reduce((sum, r) => sum + r.disponibles, 0);
+        });
+        const necesarios = labels.map(label => {
+          return dataRecursos
+            .filter(r => r.ubicacionNombre === label)
+            .reduce((sum, r) => sum + r.necesarios, 0);
+        });
+        
+        crearGraficoRecursosOperador(labels, disponibles, necesarios);
+        
+        // Gráfico de riesgos
+        const resZonas = await fetch(apiBase + '/reportes/zonas-criticas');
+        const dataZonas = await resZonas.json();
+        
+        crearGraficoRiesgosOperador(dataZonas.distribucionRiesgo);
+        
+      } catch (error) {
+        console.error('Error cargando gráficos operador:', error);
+      }
+    }
+
+    function crearGraficoRecursosOperador(labels, disponibles, necesarios) {
+      const ctx = document.getElementById('op-chart-recursos');
+      if (!ctx) return;
+      
+      if (opChartRecursos) opChartRecursos.destroy();
+      
+      opChartRecursos = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Disponibles',
+              data: disponibles,
+              backgroundColor: 'rgba(40, 167, 69, 0.7)'
+            },
+            {
+              label: 'Necesarios',
+              data: necesarios,
+              backgroundColor: 'rgba(220, 53, 69, 0.7)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    function crearGraficoRiesgosOperador(distribucion) {
+      const ctx = document.getElementById('op-chart-riesgos');
+      if (!ctx) return;
+      
+      if (opChartRiesgos) opChartRiesgos.destroy();
+      
+      opChartRiesgos = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(distribucion || {}),
+          datasets: [{
+            data: Object.values(distribucion || {}),
+            backgroundColor: [
+              'rgba(220, 53, 69, 0.8)',
+              'rgba(255, 193, 7, 0.8)',
+              'rgba(13, 110, 253, 0.8)',
+              'rgba(40, 167, 69, 0.8)'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    async function cargarHistorialOperador() {
+      try {
+        const res = await fetch(apiBase + '/distribucion/historial');
+        const historial = await res.json();
+        
+        const tbody = document.querySelector('#op-tabla-historial tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        historial.slice(0, 15).forEach(d => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${new Date(d.fechaDistribucion).toLocaleString()}</td>
+              <td>${d.origen.nombre}</td>
+              <td>${d.destino.nombre}</td>
+              <td>${d.recurso.tipo}</td>
+              <td>${d.cantidad}</td>
+              <td>${d.distanciaRecorrida.toFixed(2)}</td>
+              <td><span class="badge bg-success">${d.estado}</span></td>
+            </tr>
+          `;
+        });
+        
+      } catch (error) {
+        console.error('Error cargando historial operador:', error);
       }
     }
 

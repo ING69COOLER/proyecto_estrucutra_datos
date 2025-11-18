@@ -63,10 +63,10 @@ public class AdminController {
         try {
             logger.info("Usuario {} está cargando datos de muestra", usuario.getNombre());
             
-            // Limpia datos previos
-            ubicacionRepository.deleteAll();
-            recursoRepository.deleteAll();
-            rutaRepository.deleteAll();
+            // ✅ ORDEN CORRECTO: Primero borrar rutas, luego recursos, luego ubicaciones
+            rutaRepository.deleteAllInBatch();          // 1. Borrar RUTAS primero
+            recursoRepository.deleteAllInBatch();       // 2. Borrar RECURSOS
+            ubicacionRepository.deleteAllInBatch();     // 3. Borrar UBICACIONES al final
 
             // Crear recursos de muestra
             Recurso r1 = new Recurso();
@@ -107,7 +107,7 @@ public class AdminController {
             z2.setNombre("Zona Sur");
             z2.setTipo(co.proyecto.model.TipoUbicacion.RURAL);
             z2.setPersonasAfectadas(800);
-            z2.setNivelRiesgo("MEDIO");
+            z2.setNivelRiesgo("CRITICO");
             z2.setLat(4.55);
             z2.setLng(-74.2);
             z2.setUpdatedAt(new Date());
@@ -127,13 +127,24 @@ public class AdminController {
             z4.setNombre("Zona Oeste");
             z4.setTipo(co.proyecto.model.TipoUbicacion.RURAL);
             z4.setPersonasAfectadas(1500);
-            z4.setNivelRiesgo("CRITICO");
+            z4.setNivelRiesgo("MEDIO");
             z4.setLat(4.70);
             z4.setLng(-74.15);
             z4.setUpdatedAt(new Date());
             ubicacionRepository.save(z4);
 
             logger.info("Ubicaciones de muestra creadas: {} zonas", 4);
+
+            // ✅ ASIGNAR RECURSOS A UBICACIONES (IMPORTANTE)
+            // Zona Norte tiene recursos disponibles
+            r1.setUbicacion(z1); // Agua a Zona Norte
+            recursoRepository.save(r1);
+            
+            r2.setUbicacion(z1); // Medicina a Zona Norte
+            recursoRepository.save(r2);
+            
+            r3.setUbicacion(z1); // Alimento a Zona Norte
+            recursoRepository.save(r3);
 
             // Crear rutas de muestra
             Ruta ruta1 = new Ruta();
@@ -154,18 +165,24 @@ public class AdminController {
             ruta3.setDistancia(15.7);
             rutaRepository.save(ruta3);
 
-            logger.info("Rutas de muestra creadas: {} rutas", 3);
+            Ruta ruta4 = new Ruta();
+            ruta4.setOrigen(z3);
+            ruta4.setDestino(z4);
+            ruta4.setDistancia(10.2);
+            rutaRepository.save(ruta4);
+
+            logger.info("Rutas de muestra creadas: {} rutas", 4);
             logger.info("Carga de datos de muestra completada exitosamente por {}", usuario.getNombre());
 
             return ResponseEntity.ok().body(
-                String.format("Datos de muestra cargados correctamente por %s. " +
-                             "Recursos: 3, Ubicaciones: 4, Rutas: 3", 
+                String.format("✅ Datos de muestra cargados correctamente por %s. " +
+                             "Recursos: 3, Ubicaciones: 4, Rutas: 4", 
                              usuario.getNombre())
             );
 
         } catch (Exception e) {
             logger.error("Error al cargar datos de muestra", e);
-            return ResponseEntity.status(500).body("Error al cargar datos: " + e.getMessage());
+            return ResponseEntity.status(500).body("❌ Error al cargar datos: " + e.getMessage());
         }
     }
 
@@ -190,18 +207,19 @@ public class AdminController {
         try {
             logger.warn("Usuario {} está limpiando TODOS los datos", usuario.getNombre());
             
-            ubicacionRepository.deleteAll();
-            recursoRepository.deleteAll();
-            rutaRepository.deleteAll();
+            // ✅ ORDEN CORRECTO para evitar errores de FK
+            rutaRepository.deleteAllInBatch();        // 1. Rutas primero
+            recursoRepository.deleteAllInBatch();     // 2. Recursos segundo
+            ubicacionRepository.deleteAllInBatch();   // 3. Ubicaciones al final
             
             logger.info("Datos limpiados exitosamente por {}", usuario.getNombre());
             
             return ResponseEntity.ok().body(
-                String.format("Todos los datos han sido eliminados por %s", usuario.getNombre())
+                String.format("✅ Todos los datos han sido eliminados por %s", usuario.getNombre())
             );
         } catch (Exception e) {
             logger.error("Error al limpiar datos", e);
-            return ResponseEntity.status(500).body("Error al limpiar datos: " + e.getMessage());
+            return ResponseEntity.status(500).body("❌ Error al limpiar datos: " + e.getMessage());
         }
     }
 }
