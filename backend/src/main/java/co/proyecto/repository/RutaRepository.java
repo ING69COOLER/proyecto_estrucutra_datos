@@ -1,6 +1,7 @@
 package co.proyecto.repository;
 
 import co.proyecto.model.Ruta;
+import co.proyecto.model.Ubicacion;
 
 import java.util.List;
 
@@ -12,4 +13,8 @@ public interface RutaRepository extends JpaRepository<Ruta, Integer> {
 
     @Query("SELECT r FROM Ruta r JOIN FETCH r.origen JOIN FETCH r.destino")
     List<Ruta> findAllWithUbicaciones();
+
+    void deleteByOrigen(Ubicacion origen);
+
+    void deleteByDestino(Ubicacion destino);
 }

@@ -23,4 +23,6 @@ public interface UbicacionRepository extends JpaRepository<Ubicacion, Integer> {
            "LEFT JOIN FETCH u.recursosNecesarios " + // List
            "LEFT JOIN FETCH u.recursosDisponibles")  // Set (Ahora funciona)
     List<Ubicacion> findAllWithRecursos();
+
+    
 }

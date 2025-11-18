@@ -7,20 +7,24 @@
   <title>Sistema Gestión de Desastres Naturales — ADMIN</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
+  <!-- 1. Importar Font Awesome (para el ícono de basura) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 
   <style>
     body {
       background: #f8f9fa;
     }
 
-    /* El ID #map ya no se usa, pero #map-crear-ubicacion sí */
-    #map-crear-ubicacion {
+    /* IDs de mapas */
+    #map-crear-ubicacion,
+    #map-crear-ruta,
+    #map-eliminar-ubicacion { /* <-- 2. Añadido estilo para el nuevo mapa */
       height: 700px;
+      border-radius: 8px;
     }
 
 
@@ -63,6 +67,7 @@
 
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- ... (navbar sin cambios) ... -->
     <div class="container-fluid">
       <a class="navbar-brand" href="#">SGD - Gestión Desastres (Admin)</a>
 
@@ -98,6 +103,9 @@
             <a href="#" class="list-group-item list-group-item-action" data-tab="crear-ubicacion">Crear Ubicación</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="crear-ruta">Crear Ruta</a>
             
+            <!-- 3. AÑADIR NUEVA PESTAÑA/BOTÓN EN EL SIDEBAR -->
+            <a href="#" class="list-group-item list-group-item-action" data-tab="eliminar-ubicacion">Eliminar Ubicación</a>
+
             <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">
               Salir (apagar demo)
             </a>
@@ -111,7 +119,10 @@
       </aside>
 
       <main class="col-md-9">
+        
+        <!-- ... (Sección 'inicio' sin cambios) ... -->
         <section id="inicio" class="tab-section active">
+          <!-- ... -->
           <div class="row g-3">
             <div class="col-lg-8">
               <div class="card card-map p-3">
@@ -189,8 +200,10 @@
           </div>
         </section>
 
+        <!-- ... (Sección 'panel-admin' sin cambios) ... -->
         <section id="panel-admin" class="tab-section">
-          <div class="card p-3">
+          <!-- ... -->
+           <div class="card p-3">
             <h5>Panel de Administración</h5>
             <p class="small-muted">Crear/editar recursos, asignar a zonas, gestionar equipos de rescate.</p>
 
@@ -329,84 +342,101 @@
           </div>
         </section>
 
+        <!-- ... (Sección 'crear-ubicacion' sin cambios) ... -->
         <section id="crear-ubicacion" class="tab-section">
+          <!-- ... -->
+          <h4 class="mb-3">Crear Ubicación</h4>
+          <p class="text-muted">Haz clic en el mapa para seleccionar las coordenadas.</p>
 
-  <h4 class="mb-3">Crear Ubicación</h4>
-  <p class="text-muted">Haz clic en el mapa para seleccionar las coordenadas.</p>
+          <div class="row g-2 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Nombre</label>
+              <input id="cu_nombre" class="form-control form-control-sm" placeholder="Ej: Punto Seguro" />
+            </div>
 
-  <div class="row g-2 mb-3">
-    <div class="col-md-4">
-      <label class="form-label">Nombre</label>
-      <input id="cu_nombre" class="form-control form-control-sm" placeholder="Ej: Punto Seguro" />
-    </div>
+            <div class="col-md-4">
+              <label class="form-label">Tipo</label>
+              <select id="cu_tipo" class="form-select form-select-sm">
+                <option value="URBANA">Urbana</option>
+                <option value="RURAL">Rural</option>
+              </select>
+            </div>
 
-    <div class="col-md-4">
-      <label class="form-label">Tipo</label>
-      <select id="cu_tipo" class="form-select form-select-sm">
-        <option value="URBANA">Urbana</option>
-        <option value="RURAL">Rural</option>
-      </select>
-    </div>
+            <div class="col-md-2">
+              <label class="form-label">Latitud</label>
+              <input id="cu_lat" class="form-control form-control-sm" readonly />
+            </div>
 
-    <div class="col-md-2">
-      <label class="form-label">Latitud</label>
-      <input id="cu_lat" class="form-control form-control-sm" readonly />
-    </div>
+            <div class="col-md-2">
+              <label class="form-label">Longitud</label>
+              <input id="cu_lng" class="form-control form-control-sm" readonly />
+            </div>
 
-    <div class="col-md-2">
-      <label class="form-label">Longitud</label>
-      <input id="cu_lng" class="form-control form-control-sm" readonly />
-    </div>
+            <div class="col-md-4 mt-2">
+              <label class="form-label">Nivel de Riesgo</label>
+              <select id="cu_riesgo" class="form-select form-select-sm">
+                <option value="BAJO">Bajo</option>
+                <option value="MEDIO">Medio</option>
+                <option value="ALTO">Alto</option>
+                <option value="CRITICO">Crítico</option>
+              </select>
+            </div>
 
-    <div class="col-md-4 mt-2">
-      <label class="form-label">Nivel de Riesgo</label>
-      <select id="cu_riesgo" class="form-select form-select-sm">
-        <option value="BAJO">Bajo</option>
-        <option value="MEDIO">Medio</option>
-        <option value="ALTO">Alto</option>
-        <option value="CRITICO">Crítico</option>
-      </select>
-    </div>
+            <div class="col-md-12 mt-2">
+              <div id="map-crear-ubicacion"></div>
+            </div>
 
-    <div class="col-md-12 mt-2">
-      <div id="map-crear-ubicacion"></div>
-    </div>
+            <div class="col-12 d-grid mt-3">
+              <button class="btn btn-primary btn-sm" id="cu_guardar">Guardar Ubicación</button>
+            </div>
+          </div>
+        </section>
 
-    <div class="col-12 d-grid mt-3">
-      <button class="btn btn-primary btn-sm" id="cu_guardar">Guardar Ubicación</button>
+        <!-- ... (Sección 'crear-ruta' sin cambios) ... -->
+        <section id="crear-ruta" class="tab-section">
+          <!-- ... -->
+           <h4 class="mb-3">Crear Ruta</h4>
+          <p class="text-muted">Selecciona dos puntos en el mapa para trazar la ruta.</p>
+
+          <div class="row g-2 mb-3">
+
+            <div class="col-12">
+              <div id="map-crear-ruta" style="height:700px; border-radius:8px;"></div>
+            </div>
+
+            <div class="col-md-6 d-grid mt-3">
+              <button class="btn btn-danger btn-sm" id="cr_limpiar">Limpiar selección</button>
+            </div>
+
+            <div class="col-md-6 d-grid mt-3">
+              <button class="btn btn-success btn-sm" id="cr_guardar">Guardar Ruta</button>
+            </div>
+
+          </div>
+        </section>
+        
+        <!-- 4. AÑADIR NUEVA SECCIÓN HTML PARA ELIMINAR -->
+        <section id="eliminar-ubicacion" class="tab-section">
+          <h4 class="mb-3">Eliminar Ubicación</h4>
+          <p class="text-muted">Haz clic en un punto del mapa para seleccionarlo y luego presiona "Eliminar". Esta acción no se puede deshacer.</p>
+          
+          <div class="alert alert-info" id="info-eliminar-ubicacion">
+            Ninguna ubicación seleccionada.
+          </div>
+          
+          <div id="map-eliminar-ubicacion" class="mb-3"></div>
+          
+          <button class="btn btn-danger" id="btn-eliminar-ubicacion" disabled>
+            <i class="fa fa-trash"></i> Eliminar Ubicación Seleccionada
+          </button>
+        </section>
+
+
+      </main>
     </div>
   </div>
 
-</section>
-
-<section id="crear-ruta" class="tab-section">
-
-  <h4 class="mb-3">Crear Ruta</h4>
-  <p class="text-muted">Selecciona dos puntos en el mapa para trazar la ruta.</p>
-
-  <div class="row g-2 mb-3">
-
-    <div class="col-12">
-      <div id="map-crear-ruta" style="height:700px; border-radius:8px;"></div>
-    </div>
-
-    <div class="col-md-6 d-grid mt-3">
-      <button class="btn btn-danger btn-sm" id="cr_limpiar">Limpiar selección</button>
-    </div>
-
-    <div class="col-md-6 d-grid mt-3">
-      <button class="btn btn-success btn-sm" id="cr_guardar">Guardar Ruta</button>
-    </div>
-
-  </div>
-
-</section>
-
-
-        </main>
-    </div>
-  </div>
-
+  <!-- ... (Modal de login sin cambios) ... -->
   <div class="modal fade" id="modalLogin" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -450,7 +480,8 @@
 
   <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script> 
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Font Awesome (ya lo pusimos en el head, pero por si acaso) -->
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> -->
 
   <script>
     const apiBase = document.getElementById('backendUrl').textContent;
@@ -472,9 +503,6 @@
       .forEach(s => s.classList.remove('active'));
      document.getElementById(tab).classList.add('active');
 
-    // ───────────────────────────────────────────
-    //  INICIALIZAR MAPA SOLO EN ESTA PESTAÑA
-    // ───────────────────────────────────────────
       
       if (tab === "panel-admin") {
         populateLocationDropdown(); 
@@ -501,21 +529,31 @@
           cuMap.invalidateSize(); // ← Arregla el mapa roto
         }, 100);
       }
-    // ───────────────────────────────────────────
 
-    if (tab === "crear-ruta") {
-      setTimeout(() => {
-        if (!crMap) {
-          initCrearRutaMap();
-        } else {
-          // Necesario porque Leaflet a veces no se ve bien al aparecer
-          crMap.invalidateSize();
-        }
-      }, 50);
-    }
+      if (tab === "crear-ruta") {
+        setTimeout(() => {
+          if (!crMap) {
+            initCrearRutaMap();
+          } else {
+            crMap.invalidateSize();
+          }
+        }, 50);
+      }
+
+      // --- 5. AÑADIR LÓGICA PARA INICIALIZAR EL NUEVO MAPA ---
+      if (tab === "eliminar-ubicacion" && !delMapInitialized) {
+        setTimeout(() => {
+          initEliminarUbicacionMap();
+          delMapInitialized = true;
+        }, 100);
+      } else if (tab === "eliminar-ubicacion") {
+        setTimeout(() => delMap.invalidateSize(), 150);
+      }
+      // --- FIN DEL CAMBIO 5 ---
+    });
   });
-});
 
+// ... (mapa crear ubicacion, guardar ubicacion, mapa crear ruta, etc. se mantienen igual) ...
 //mapa bueno
     // ----- MAPA CREAR UBICACIÓN -----
   let cuMap = L.map("map-crear-ubicacion").setView([4.65, -74.1], 12);
@@ -686,19 +724,12 @@ function dibujarRuta() {
     crRouteSummary = null;
   }
 
-  // ✅ ESTA ES LA CORRECCIÓN CLAVE:
-  // Dejamos que el plugin cree sus marcadores por defecto (A y B)
-  // y solo ocultamos el panel de instrucciones de texto.
   crLine = L.Routing.control({
     waypoints: [p1, p2],
-    show: false, // Oculta el panel de texto de "instrucciones"
-    routeWhileDragging: false, // No permite arrastrar la ruta
-    addWaypoints: false, // No permite añadir más puntos
+    show: false, 
+    routeWhileDragging: false, 
+    addWaypoints: false, 
     
-    // 👇 Ya no usamos 'createMarker', dejamos que el plugin
-    //    ponga sus marcadores A (verde) y B (rojo) por defecto.
-    
-    // Personalizar el color de la línea
     lineOptions: {
       styles: [{color: 'blue', opacity: 0.8, weight: 6}]
     }
@@ -717,14 +748,9 @@ function dibujarRuta() {
 // Limpiar selección (CORREGIDO)
 // -----------------------------
 function limpiarRuta() {
-  // ✅ CORRECCIÓN: Ya no necesitamos hacer visibles los marcadores
-  // porque nunca los ocultamos.
-  
   crSelected = [];
   crRouteSummary = null;
 
-  // Borrar el control de ruta del mapa (esto borra los
-  // marcadores A/B y la línea azul)
   if (crLine) {
     crMap.removeControl(crLine);
     crLine = null;
@@ -736,7 +762,7 @@ document.getElementById("cr_limpiar").addEventListener("click", limpiarRuta);
 
 
 // ---------------------------------
-//  LÓGICA DE GUARDADO (Sin cambios, pero la incluyo)
+//  LÓGICA DE GUARDADO (Sin cambios)
 // ---------------------------------
 document.getElementById("cr_guardar").addEventListener("click", guardarRuta);
 
@@ -754,7 +780,7 @@ async function guardarRuta() {
   const markerOrigen = crSelected[0];
   const markerDestino = crSelected[1];
   const distanciaKm = crRouteSummary.totalDistance / 1000;
-//id: markerDestino.data.id 
+
   const payload = {
     origen: { id: markerOrigen.data.id ,lat: markerOrigen.data.lat, lng: markerOrigen.data.lng, nombre: markerOrigen.data.nombre },
     destino: { id: markerDestino.data.id ,lat: markerDestino.data.lat, lng: markerDestino.data.lng, nombre: markerDestino.data.nombre},
@@ -772,7 +798,7 @@ async function guardarRuta() {
     if (res.ok) {
       Swal.fire(
         '¡Ruta Creada!',
-        `Se guardó la ruta entre ${markerOrigen.data.nombre} y ${markerDestino.data.nombre} (${payload.distancia} km).`,
+        `Se guardó la ruta entre ${markerOrigen.data.nombre} y ${markerDestino.data.nombre} (${distanciaKm.toFixed(2)} km).`, // Mostramos la distancia calculada
         'success'
       );
       limpiarRuta();
@@ -786,6 +812,150 @@ async function guardarRuta() {
     Swal.fire('Error de Red', 'No se pudo conectar con el servidor.', 'error');
   }
 }
+
+    // --- 6. AÑADIR NUEVAS VARIABLES GLOBALES Y FUNCIONES PARA EL MAPA DE BORRADO ---
+
+    let delMap = null; // El mapa de eliminar
+    let delMapMarkers = []; // Array de marcadores en el mapa
+    let delMapSelectedMarker = null; // El marcador que está seleccionado
+    let delMapInitialized = false; // Flag para saber si ya se inicializó
+
+    // Iconos personalizados para la selección
+    const defaultIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41]
+    });
+    
+    // Icono rojo para destacar la selección
+    const redIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41]
+    });
+
+
+    /**
+     * Inicializa el mapa en la pestaña "Eliminar Ubicación"
+     */
+    async function initEliminarUbicacionMap() {
+      if (delMap) delMap.remove(); // Limpiar mapa anterior si existe
+      
+      delMap = L.map("map-eliminar-ubicacion").setView([4.65, -74.1], 12);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(delMap);
+
+      // Limpiar marcadores antiguos
+      delMapMarkers.forEach(m => m.remove());
+      delMapMarkers = [];
+      delMapSelectedMarker = null;
+      document.getElementById('btn-eliminar-ubicacion').disabled = true;
+      document.getElementById('info-eliminar-ubicacion').textContent = 'Ninguna ubicación seleccionada.';
+
+      // Reutilizamos la función que carga ubicaciones para el mapa de rutas
+      const ubicaciones = await loadUbicacionesParaRutas(); 
+      const bounds = [];
+
+      ubicaciones.forEach(u => {
+        if (u.lat && u.lng) {
+          const marker = L.marker([u.lat, u.lng], {
+            icon: defaultIcon // Empezar con el icono azul normal
+          }).addTo(delMap);
+          
+          marker.data = u; // Guardar toda la data de la ubicación
+          marker.on("click", () => handleMarkerSelectForDelete(marker));
+          delMapMarkers.push(marker);
+          bounds.push([u.lat, u.lng]);
+        }
+      });
+
+      if (bounds.length > 0) {
+        delMap.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+
+    /**
+     * Se llama cuando el usuario hace clic en un marcador en el mapa de eliminar.
+     */
+    function handleMarkerSelectForDelete(marker) {
+      // 1. Resetear el marcador anteriormente seleccionado (si existe)
+      if (delMapSelectedMarker) {
+        delMapSelectedMarker.setIcon(defaultIcon);
+      }
+
+      // 2. Guardar y destacar el nuevo marcador
+      // 2. Guardar y destacar el nuevo marcador
+      delMapSelectedMarker = marker;
+      delMapSelectedMarker.setIcon(redIcon); // Ponerlo en rojo
+      delMapSelectedMarker.setZIndexOffset(1000); // <-- CORRECCIÓN (Usar setZIndexOffset para traer al frente)
+
+      // 3. (Para depurar) Imprimir la data en consola, como pediste
+      console.log('Ubicación seleccionada (guardada):', delMapSelectedMarker.data);
+
+      // 4. Actualizar UI (texto y botón)
+      document.getElementById('info-eliminar-ubicacion').textContent = 
+        `Seleccionado: ${marker.data.nombre} (ID: ${marker.data.id})`;
+      document.getElementById('btn-eliminar-ubicacion').disabled = false;
+    }
+    /**
+     * Listener para el botón de eliminar
+     */
+    document.getElementById('btn-eliminar-ubicacion').addEventListener('click', async () => {
+      if (!delMapSelectedMarker) {
+        Swal.fire('Error', 'No hay ninguna ubicación seleccionada.', 'warning');
+        return;
+      }
+
+      const id = delMapSelectedMarker.data.id;
+      const nombre = delMapSelectedMarker.data.nombre;
+
+      // Confirmación de SweetAlert
+      const result = await Swal.fire({
+        title: `¿Eliminar "${nombre}"?`,
+        text: "¡No podrás revertir esto! Se eliminarán también todas las rutas conectadas a esta ubicación.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, ¡eliminar!',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          // Petición DELETE al backend
+          const response = await fetch(`${apiBase}/zonas/${id}`, {
+            method: 'DELETE'
+          });
+
+          const responseText = await response.text();
+
+          if (!response.ok) {
+            throw new Error(responseText || 'Error del servidor');
+          }
+
+          Swal.fire('¡Eliminado!', responseText, 'success');
+          
+          // Quitar el marcador del mapa
+          delMapSelectedMarker.remove();
+          
+          // Resetear estado
+          delMapSelectedMarker = null;
+          document.getElementById('btn-eliminar-ubicacion').disabled = true;
+          document.getElementById('info-eliminar-ubicacion').textContent = 'Ninguna ubicación seleccionada.';
+          addLog(`Ubicación eliminada: ${nombre} (ID: ${id})`);
+          
+          // Recargar las otras tablas para que reflejen el cambio
+          loadUbicaciones();
+          loadZonas();
+
+        } catch (error) {
+          console.error('Error al eliminar:', error);
+          Swal.fire('Error', `No se pudo eliminar: ${error.message}`, 'error');
+        }
+      }
+    });
+
+    // --- FIN DE LA LÓGICA DE BORRADO ---
 
 
     let stompClient = null;
@@ -1094,6 +1264,12 @@ async function populateLocationDropdown() {
           loadRecursos();
           loadZonas();
           addLog('Datos refrescados manualmente');
+          
+          // --- 7. AÑADIR REFRESCO AL NUEVO MAPA ---
+          if (document.getElementById('eliminar-ubicacion').classList.contains('active')) {
+             initEliminarUbicacionMap();
+          }
+          // --- FIN DEL CAMBIO 7 ---
         });
       }
     });
