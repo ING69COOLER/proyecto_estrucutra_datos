@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 
@@ -111,18 +110,12 @@ public class UbicacionController {
                     .map(ubicacion -> {
                         List<co.proyecto.dto.CaminoResultante> resultados = grafo.getRutasDestino(ubicacion);
 
-                        // Elegir el camino con menor distancia entre todos los orígenes
-                        co.proyecto.dto.CaminoResultante masCorto = resultados.stream()
-                                .min(Comparator.comparingDouble(co.proyecto.dto.CaminoResultante::getDistanciaMinima))
-                                .orElse(null);
-
-                        if (masCorto == null) {
-                            // No hay caminos desde ningún origen hacia el destino
-                            return ResponseEntity.status(404).body("No se encontró ningún camino hacia la ubicación destino");
+                        // Devolver todos los caminos (posibles orígenes). Si no hay, devolver arreglo vacío.
+                        if (resultados == null || resultados.isEmpty()) {
+                            return ResponseEntity.ok(Collections.emptyList());
                         }
 
-                        // Devolver un arreglo con el único camino más corto (compatibilidad frontend)
-                        return ResponseEntity.ok(Collections.singletonList(masCorto));
+                        return ResponseEntity.ok(resultados);
                     })
                     .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
