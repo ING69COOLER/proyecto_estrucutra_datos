@@ -229,7 +229,8 @@
                   <select id="selectDestinoPaths" class="form-select form-select-sm">
                     <option value="">Cargando destinos...</option>
                   </select>
-                  <button id="btn-trazar-caminos" class="btn btn-sm btn-primary">Trazar</button>
+                    <button id="btn-trazar-caminos" class="btn btn-sm btn-primary">Trazar</button>
+                    <button id="btn-show-all-routes" class="btn btn-sm btn-outline-secondary" title="Mostrar todas las rutas">Mostrar todas</button>
                 </div>
               </div>
 
@@ -319,6 +320,17 @@
           crMapInitialized = true;
           // Llenar dropdown de destinos una vez que el mapa de rutas se inicializa
           setTimeout(populateDestinationDropdownForPaths, 200);
+          // Conectar botones de trazado/restaurar rutas
+          setTimeout(() => {
+            const btnTrazar = document.getElementById('btn-trazar-caminos');
+            if (btnTrazar) btnTrazar.addEventListener('click', () => {
+              const sel = document.getElementById('selectDestinoPaths');
+              if (sel) trazarCaminosHaciaDestino(sel.value);
+            });
+
+            const btnRestore = document.getElementById('btn-show-all-routes');
+            if (btnRestore) btnRestore.addEventListener('click', () => restoreAllRoutes());
+          }, 300);
         } else if (tab === 'panel-rutas') {
            console.log("▶️ Entrando a 'Panel Rutas' (mapa ya inicializado). Refrescando tamaño.");
            setTimeout(() => crMap.invalidateSize(), 150);
@@ -430,6 +442,11 @@
         }
 
         clearPathLayers();
+
+        // Ocultar las rutas generales (crRouteControls) para mostrar sólo los caminos hacia el destino
+        if (Array.isArray(crRouteControls)) {
+          crRouteControls.forEach(line => { try { if (crMap && line) crMap.removeLayer(line); } catch(e){}});
+        }
         const bounds = [];
         const palette = ['blue','green','purple','orange','teal','magenta'];
 
@@ -450,7 +467,19 @@
           const opacity = isShortest ? 1.0 : 0.85;
 
           const pl = L.polyline(latlngs, { color, weight, opacity }).addTo(crMap);
-          pl.bindPopup(`<b>Origen:</b> ${cam.origen?.nombre || 'N/A'}<br/><b>Distancia:</b> ${cam.distanciaMinima?.toFixed(2) || 'N/A'} km${isShortest ? ' <br><i>(camino más corto)</i>' : ''}`);
+
+          // Preparar HTML para recursos asignados (disponibles o necesarios)
+          const recursos = cam.origen?.recursosDisponibles || cam.origen?.recursosNecesarios || [];
+          let recursosHtml = '';
+          if (Array.isArray(recursos) && recursos.length > 0) {
+            recursosHtml = '<br/><b>Recursos:</b><br/>' + recursos.map(r => {
+              const nombre = r?.nombre || r?.tipo || 'Recurso';
+              const cantidad = (r?.cantidad != null) ? r.cantidad : 'N/A';
+              return `${nombre}: ${cantidad}`;
+            }).join('<br/>');
+          }
+
+          pl.bindPopup(`<b>Origen:</b> ${cam.origen?.nombre || 'N/A'}<br/><b>Distancia:</b> ${cam.distanciaMinima?.toFixed(2) || 'N/A'} km${isShortest ? ' <br><i>(camino más corto)</i>' : ''}${recursosHtml}`);
           crPathLayers.push(pl);
           latlngs.forEach(p => bounds.push(p));
         });
@@ -461,6 +490,12 @@
         console.error('Error trazando caminos:', error);
         Swal.fire('Error', 'No se pudieron obtener los caminos: ' + error.message, 'error');
       }
+    }
+
+    // Restaurar las rutas generales al mapa (si fueron ocultadas)
+    function restoreAllRoutes() {
+      if (!crMap || !Array.isArray(crRouteControls)) return;
+      crRouteControls.forEach(line => { try { if (line && !crMap.hasLayer(line)) line.addTo(crMap); } catch(e){} });
     }
 
     async function populateDestinationDropdownForPaths() {
