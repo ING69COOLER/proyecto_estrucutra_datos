@@ -62,6 +62,42 @@
     .badge-risk-high {
       background: #dc3545;
     }
+
+    /* FORZAR LAYOUT DE DOS COLUMNAS */
+    .container-fluid {
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-right: -15px;
+      margin-left: -15px;
+    }
+
+    aside.col-md-3 {
+      flex: 0 0 25%;
+      max-width: 25%;
+      padding-right: 15px;
+      padding-left: 15px;
+    }
+
+    main.col-md-9 {
+      flex: 0 0 75%;
+      max-width: 75%;
+      padding-right: 15px;
+      padding-left: 15px;
+    }
+
+    /* RESPONSIVE: En pantallas pequeñas, stack vertical */
+    @media (max-width: 768px) {
+      aside.col-md-3,
+      main.col-md-9 {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+    }
   </style>
 </head>
 
@@ -105,6 +141,10 @@
             
             <!-- 3. AÑADIR NUEVA PESTAÑA/BOTÓN EN EL SIDEBAR -->
             <a href="#" class="list-group-item list-group-item-action" data-tab="eliminar-ubicacion">Eliminar Ubicación</a>
+            <!-- DESPUÉS de la línea de "Eliminar Ubicación" -->
+            <a href="#" class="list-group-item list-group-item-action" data-tab="distribuir-recursos">Distribuir Recursos</a>
+            <a href="#" class="list-group-item list-group-item-action" data-tab="reportes">Reportes y Estadísticas</a>
+            <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
 
             <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">
               Salir (apagar demo)
@@ -431,6 +471,232 @@
           </button>
         </section>
 
+        <!-- ========================================
+             SECCIÓN: DISTRIBUIR RECURSOS
+        ========================================= -->
+        <section id="distribuir-recursos" class="tab-section">
+          <h4 class="mb-3">Distribución de Recursos</h4>
+          <p class="text-muted">Transfiere recursos desde ubicaciones con excedente hacia zonas necesitadas.</p>
+
+          <div class="row g-3">
+            
+            <!-- Formulario Manual -->
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Distribución Manual</h5>
+                
+                <form id="form-distribucion-manual">
+                  <div class="mb-2">
+                    <label class="form-label">Ubicación Origen</label>
+                    <select id="dist_origen" class="form-select form-select-sm" required>
+                      <option value="">Cargando...</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label">Ubicación Destino</label>
+                    <select id="dist_destino" class="form-select form-select-sm" required>
+                      <option value="">Cargando...</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label">Recurso a Transferir</label>
+                    <select id="dist_recurso" class="form-select form-select-sm" required disabled>
+                      <option value="">Selecciona primero un origen</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label">Cantidad</label>
+                    <input id="dist_cantidad" type="number" class="form-control form-control-sm" min="1" required />
+                    <small class="text-muted">Disponible: <span id="dist_disponible">-</span></small>
+                  </div>
+
+                  <button type="submit" class="btn btn-success w-100">
+                    <i class="fa fa-truck"></i> Ejecutar Distribución
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Panel de Sugerencias -->
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Sugerencias Automáticas</h5>
+                <p class="small text-muted">El sistema priorizará por urgencia y proximidad.</p>
+
+                <div class="mb-2">
+                  <label class="form-label">Destino Crítico</label>
+                  <select id="dist_sugerencia_destino" class="form-select form-select-sm">
+                    <option value="">Cargando...</option>
+                  </select>
+                </div>
+
+                <button id="btn-calcular-sugerencias" class="btn btn-primary w-100 mb-3">
+                  <i class="fa fa-magic"></i> Calcular Sugerencias
+                </button>
+
+                <div id="sugerencias-container" style="max-height: 300px; overflow-y: auto;">
+                  <p class="text-muted small text-center">Selecciona un destino y haz clic en "Calcular"</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Historial de Distribuciones -->
+          <div class="card p-3 mt-3">
+            <h5>Historial de Distribuciones</h5>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped" id="tabla-historial-distribuciones">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Recurso</th>
+                    <th>Cantidad</th>
+                    <th>Distancia (km)</th>
+                    <th>Estado</th>
+                    <th>Responsable</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Se llena dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================
+             SECCIÓN: REPORTES Y ESTADÍSTICAS
+        ========================================= -->
+        <section id="reportes" class="tab-section">
+          <h4 class="mb-3">Reportes y Estadísticas</h4>
+          <p class="text-muted">Análisis general del sistema de recursos.</p>
+
+          <div class="row g-3">
+            
+            <!-- Indicadores Clave -->
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Total Distribuciones</h6>
+                <p id="stat_total_dist" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Recursos Distribuidos</h6>
+                <p id="stat_recursos_dist" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Distancia Total (km)</h6>
+                <p id="stat_distancia" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card p-3 text-center">
+                <h6>Zonas Críticas</h6>
+                <p id="stat_zonas_criticas" class="display-6 m-0">-</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Gráficos -->
+          <div class="row g-3 mt-3">
+            
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Recursos por Zona</h5>
+                <canvas id="chart-recursos-zona" style="max-height: 300px;"></canvas>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Distribución de Riesgos</h5>
+                <canvas id="chart-riesgos" style="max-height: 300px;"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Tabla Detallada -->
+          <div class="card p-3 mt-3">
+            <h5>Reporte Detallado de Recursos</h5>
+            
+            <button id="btn-exportar-csv" class="btn btn-sm btn-outline-success mb-2">
+              <i class="fa fa-download"></i> Exportar CSV
+            </button>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-striped" id="tabla-reporte-recursos">
+                <thead>
+                  <tr>
+                    <th>Ubicación</th>
+                    <th>Tipo Recurso</th>
+                    <th>Disponibles</th>
+                    <th>Necesarios</th>
+                    <th>Nivel Riesgo</th>
+                    <th>Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Se llena dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================
+             SECCIÓN: CARGA INICIAL DE DATOS
+        ========================================= -->
+        <section id="carga-datos" class="tab-section">
+          <div class="card p-3">
+            <h5>Carga de datos iniciales</h5>
+            <p class="small-muted">Sube un archivo JSON con zonas, rutas y recursos, o pulsa el botón para cargar datos de prueba.</p>
+
+            <div class="mb-3">
+              <input type="file" id="fileLoad" accept=".json" class="form-control form-control-sm" />
+            </div>
+            
+            <div class="d-flex gap-2">
+              <button id="btn-load-sample" class="btn btn-primary btn-sm">
+                <i class="fa fa-database"></i> Cargar datos de muestra
+              </button>
+              <button id="btn-load-file" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-upload"></i> Cargar desde archivo
+              </button>
+              <button id="btn-clear-data" class="btn btn-outline-danger btn-sm">
+                <i class="fa fa-trash"></i> Limpiar todos los datos
+              </button>
+            </div>
+            
+            <hr>
+            
+            <h6 class="mt-3">Datos de Muestra Incluidos:</h6>
+            <ul class="small">
+              <li><strong>4 Ubicaciones:</strong> Zona Norte, Zona Sur, Zona Este, Zona Oeste</li>
+              <li><strong>Recursos:</strong> Agua Potable (100), Kit Médico (50), Alimentos (200)</li>
+              <li><strong>Rutas:</strong> Conexiones entre zonas con distancias calculadas</li>
+              <li><strong>Niveles de Riesgo:</strong> CRITICO, ALTO, MEDIO, BAJO</li>
+            </ul>
+            
+            <div class="alert alert-info mt-3">
+              <strong>💡 Recomendación:</strong> Carga los datos de muestra antes de usar "Distribuir Recursos" o "Reportes".
+            </div>
+          </div>
+        </section>
 
       </main>
     </div>
@@ -490,68 +756,78 @@
     // Navegación de pestañas (sidebar)
     document.querySelectorAll('.list-group .list-group-item').forEach(a => {
       a.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (!a.dataset.tab) return;
+        e.preventDefault();
+        if (!a.dataset.tab) return;
 
-      document.querySelectorAll('.list-group .list-group-item')
-      .forEach(x => x.classList.remove('active'));
-      a.classList.add('active');
+        document.querySelectorAll('.list-group .list-group-item')
+          .forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
 
-      const tab = a.getAttribute('data-tab');
+        const tab = a.getAttribute('data-tab');
 
-      document.querySelectorAll('.tab-section')
-      .forEach(s => s.classList.remove('active'));
-     document.getElementById(tab).classList.add('active');
+        document.querySelectorAll('.tab-section')
+          .forEach(s => s.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
 
-      
-      if (tab === "panel-admin") {
-        populateLocationDropdown(); 
-      }
+        // ========== LÓGICA ESPECÍFICA POR PESTAÑA ==========
+        
+        if (tab === "panel-admin") {
+          populateLocationDropdown(); 
+        }
 
-      if (tab === "crear-ubicacion") {
-        setTimeout(() => {
-          if (!cuMap) {
-            cuMap = L.map("map-crear-ubicacion").setView([4.65, -74.1], 12);
+        if (tab === "crear-ubicacion") {
+          setTimeout(() => {
+            if (!cuMap) {
+              cuMap = L.map("map-crear-ubicacion").setView([4.65, -74.1], 12);
+              L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19
+              }).addTo(cuMap);
+              cuMap.on("click", (e) => {
+                if (cuMarker) cuMap.removeLayer(cuMarker);
+                cuMarker = L.marker(e.latlng).addTo(cuMap);
+                cu_lat.value = e.latlng.lat.toFixed(6);
+                cu_lng.value = e.latlng.lng.toFixed(6);
+              });
+            }
+            cuMap.invalidateSize();
+          }, 100);
+        }
 
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-             maxZoom: 19
-            }).addTo(cuMap);
+        if (tab === "crear-ruta") {
+          setTimeout(() => {
+            if (!crMap) {
+              initCrearRutaMap();
+            } else {
+              crMap.invalidateSize();
+            }
+          }, 50);
+        }
 
-            cuMap.on("click", (e) => {
-              if (cuMarker) cuMap.removeLayer(cuMarker);
-              cuMarker = L.marker(e.latlng).addTo(cuMap);
+        if (tab === "eliminar-ubicacion" && !delMapInitialized) {
+          setTimeout(() => {
+            initEliminarUbicacionMap();
+            delMapInitialized = true;
+          }, 100);
+        } else if (tab === "eliminar-ubicacion") {
+          setTimeout(() => delMap.invalidateSize(), 150);
+        }
 
-              cu_lat.value = e.latlng.lat.toFixed(6);
-              cu_lng.value = e.latlng.lng.toFixed(6);
-            });
-          }
+        // ========== NUEVAS PESTAÑAS ==========
+        
+        if (tab === "distribuir-recursos") {
+          setTimeout(() => {
+            cargarUbicacionesParaDistribucion();
+            cargarHistorialDistribuciones();
+          }, 100);
+        }
 
-          cuMap.invalidateSize(); // ← Arregla el mapa roto
-        }, 100);
-      }
-
-      if (tab === "crear-ruta") {
-        setTimeout(() => {
-          if (!crMap) {
-            initCrearRutaMap();
-          } else {
-            crMap.invalidateSize();
-          }
-        }, 50);
-      }
-
-      // --- 5. AÑADIR LÓGICA PARA INICIALIZAR EL NUEVO MAPA ---
-      if (tab === "eliminar-ubicacion" && !delMapInitialized) {
-        setTimeout(() => {
-          initEliminarUbicacionMap();
-          delMapInitialized = true;
-        }, 100);
-      } else if (tab === "eliminar-ubicacion") {
-        setTimeout(() => delMap.invalidateSize(), 150);
-      }
-      // --- FIN DEL CAMBIO 5 ---
+        if (tab === "reportes") {
+          setTimeout(() => {
+            cargarReportes();
+          }, 100);
+        }
+      });
     });
-  });
 
 // ... (mapa crear ubicacion, guardar ubicacion, mapa crear ruta, etc. se mantienen igual) ...
 //mapa bueno
@@ -1146,7 +1422,10 @@ async function populateLocationDropdown() {
               <td>${r.tipo}</td>
               <td>${r.cantidad}</td>
               <td>${r.disponible ? 'Sí' : 'No'}</td>
-              <td><button class="btn btn-sm btn-outline-primary" data-id="${r.id}">Asignar</button></td>`;
+              <td>
+                <button class="btn btn-sm btn-outline-primary" data-id="${r.id}" data-action="asignar">Asignar</button>
+                <button class="btn btn-sm btn-outline-danger" data-id="${r.id}" data-action="eliminar">Eliminar</button>
+              </td>`;
             tbody.appendChild(tr);
           });
           document.getElementById('totalResources').textContent = total;
@@ -1163,6 +1442,41 @@ async function populateLocationDropdown() {
         .then(r => r.json())
         .then(ubicacion => { mostrarUbicacion(ubicacion); })
         .catch(err => console.error('Error al obtener ubicación:', err));
+    });
+
+    // Click en botones de recursos (Asignar / Eliminar)
+    document.querySelector('#tabla-recursos tbody').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      
+      if (action === 'eliminar') {
+        Swal.fire({
+          title: '¿Confirmar eliminación?',
+          text: 'Este recurso será eliminado permanentemente',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          confirmButtonText: 'Sí, eliminar'
+        }).then(result => {
+          if (result.isConfirmed) {
+            fetch(apiBase + '/recursos/' + id, { method: 'DELETE' })
+              .then(r => {
+                if (r.ok) {
+                  Swal.fire('Eliminado', 'Recurso eliminado correctamente', 'success');
+                  loadRecursos();
+                } else {
+                  Swal.fire('Error', 'No se pudo eliminar el recurso', 'error');
+                }
+              })
+              .catch(err => {
+                console.error('Error al eliminar:', err);
+                Swal.fire('Error', 'Error al eliminar el recurso', 'error');
+              });
+          }
+        });
+      }
     });
 
     function mostrarUbicacion(ubicacion) {
@@ -1249,12 +1563,553 @@ async function populateLocationDropdown() {
         });
     }
 
+    // ========================================
+    //   DISTRIBUCIÓN DE RECURSOS
+    // ========================================
+
+    let recursosDelOrigen = []; // Almacena los recursos del origen seleccionado
+
+    // Cargar ubicaciones en los selectores de distribución
+    async function cargarUbicacionesParaDistribucion() {
+      try {
+        const res = await fetch(apiBase + '/zonas');
+        const ubicaciones = await res.json();
+        
+        const selectOrigen = document.getElementById('dist_origen');
+        const selectDestino = document.getElementById('dist_destino');
+        const selectSugerenciaDestino = document.getElementById('dist_sugerencia_destino');
+        
+        if (selectOrigen) {
+          selectOrigen.innerHTML = '<option value="">Selecciona origen</option>';
+          selectDestino.innerHTML = '<option value="">Selecciona destino</option>';
+          selectSugerenciaDestino.innerHTML = '<option value="">Selecciona destino crítico</option>';
+          
+          ubicaciones.forEach(u => {
+            const optionOrigen = new Option(`${u.nombre} (ID: ${u.id})`, u.id);
+            const optionDestino = new Option(`${u.nombre} (${u.nivelRiesgo})`, u.id);
+            const optionSugerencia = new Option(`${u.nombre} (${u.nivelRiesgo})`, u.id);
+            
+            selectOrigen.appendChild(optionOrigen.cloneNode(true));
+            selectDestino.appendChild(optionDestino.cloneNode(true));
+            
+            // Solo críticas/altas en sugerencias
+            if (u.nivelRiesgo === 'CRITICO' || u.nivelRiesgo === 'ALTO') {
+              selectSugerenciaDestino.appendChild(optionSugerencia);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error cargando ubicaciones para distribución:', error);
+      }
+    }
+
+    // Cuando cambia el origen, cargar sus recursos
+    document.getElementById('dist_origen')?.addEventListener('change', async (e) => {
+      const origenId = e.target.value;
+      const selectRecurso = document.getElementById('dist_recurso');
+      
+      if (!origenId) {
+        selectRecurso.disabled = true;
+        selectRecurso.innerHTML = '<option value="">Selecciona primero un origen</option>';
+        return;
+      }
+      
+      try {
+        const res = await fetch(apiBase + '/zonas/' + origenId);
+        const ubicacion = await res.json();
+        
+        recursosDelOrigen = ubicacion.recursosDisponibles || [];
+        
+        selectRecurso.innerHTML = '<option value="">Selecciona un recurso</option>';
+        
+        if (recursosDelOrigen.length === 0) {
+          selectRecurso.innerHTML = '<option value="">No hay recursos disponibles</option>';
+          selectRecurso.disabled = true;
+          return;
+        }
+        
+        recursosDelOrigen.forEach(r => {
+          if (r.cantidad > 0) {
+            const option = new Option(`${r.tipo} (${r.nombre}) - Cant: ${r.cantidad}`, r.id);
+            selectRecurso.appendChild(option);
+          }
+        });
+        
+        selectRecurso.disabled = false;
+        
+      } catch (error) {
+        console.error('Error cargando recursos del origen:', error);
+      }
+    });
+
+    // Cuando cambia el recurso, mostrar cantidad disponible
+    document.getElementById('dist_recurso')?.addEventListener('change', (e) => {
+      const recursoId = parseInt(e.target.value);
+      const spanDisponible = document.getElementById('dist_disponible');
+      
+      if (!recursoId) {
+        spanDisponible.textContent = '-';
+        return;
+      }
+      
+      const recurso = recursosDelOrigen.find(r => r.id === recursoId);
+      if (recurso) {
+        spanDisponible.textContent = recurso.cantidad;
+        document.getElementById('dist_cantidad').max = recurso.cantidad;
+      }
+    });
+
+    // Ejecutar distribución manual
+    document.getElementById('form-distribucion-manual')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        origenId: parseInt(document.getElementById('dist_origen').value),
+        destinoId: parseInt(document.getElementById('dist_destino').value),
+        recursoId: parseInt(document.getElementById('dist_recurso').value),
+        cantidad: parseInt(document.getElementById('dist_cantidad').value)
+      };
+      
+      try {
+        const res = await fetch(apiBase + '/distribucion/ejecutar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+          const errorMsg = await res.text();
+          throw new Error(errorMsg);
+        }
+        
+        const distribucion = await res.json();
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Distribución Exitosa!',
+          html: `
+            <b>Origen:</b> ${distribucion.origen.nombre}<br>
+            <b>Destino:</b> ${distribucion.destino.nombre}<br>
+            <b>Cantidad:</b> ${distribucion.cantidad}<br>
+            <b>Distancia:</b> ${distribucion.distanciaRecorrida.toFixed(2)} km
+          `
+        });
+        
+        addLog(`Distribución ejecutada: ${distribucion.cantidad} unidades de ${distribucion.recurso.tipo}`);
+        
+        // Recargar datos
+        e.target.reset();
+        cargarHistorialDistribuciones();
+        
+      } catch (error) {
+        console.error('Error ejecutando distribución:', error);
+        Swal.fire('Error', error.message, 'error');
+      }
+    });
+
+    // Calcular sugerencias automáticas
+    document.getElementById('btn-calcular-sugerencias')?.addEventListener('click', async () => {
+      const destinoId = document.getElementById('dist_sugerencia_destino').value;
+      
+      if (!destinoId) {
+        Swal.fire('Aviso', 'Selecciona un destino crítico', 'warning');
+        return;
+      }
+      
+      try {
+        const res = await fetch(apiBase + '/distribucion/sugerencias/' + destinoId);
+        const sugerencias = await res.json();
+        
+        const container = document.getElementById('sugerencias-container');
+        
+        if (sugerencias.length === 0) {
+          container.innerHTML = '<p class="text-muted small">No hay sugerencias disponibles para este destino.</p>';
+          return;
+        }
+        
+        container.innerHTML = '';
+        
+        sugerencias.forEach((sug, index) => {
+          const card = document.createElement('div');
+          card.className = 'card mb-2 p-2';
+          card.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>${index + 1}. ${sug.origen.nombre}</strong><br>
+                <small>${sug.recurso.tipo} - ${sug.cantidadDisponible} unidades</small><br>
+                <small class="text-muted">Distancia: ${sug.distancia.toFixed(2)} km | Score: ${sug.score.toFixed(2)}</small>
+              </div>
+              <button class="btn btn-sm btn-outline-primary" onclick="aplicarSugerencia(${sug.origen.id}, ${destinoId}, ${sug.recurso.id})">
+                Aplicar
+              </button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+        
+        addLog(`Sugerencias calculadas para destino ID ${destinoId}: ${sugerencias.length} opciones`);
+        
+      } catch (error) {
+        console.error('Error calculando sugerencias:', error);
+        Swal.fire('Error', 'No se pudieron calcular sugerencias', 'error');
+      }
+    });
+
+    // Aplicar una sugerencia
+    function aplicarSugerencia(origenId, destinoId, recursoId) {
+      document.getElementById('dist_origen').value = origenId;
+      document.getElementById('dist_origen').dispatchEvent(new Event('change'));
+      
+      setTimeout(() => {
+        document.getElementById('dist_destino').value = destinoId;
+        document.getElementById('dist_recurso').value = recursoId;
+        document.getElementById('dist_recurso').dispatchEvent(new Event('change'));
+        
+        // Cambiar a la pestaña de distribución manual
+        document.querySelector('[data-tab="distribuir-recursos"]').click();
+      }, 500);
+    }
+
+    // Cargar historial de distribuciones
+    async function cargarHistorialDistribuciones() {
+      try {
+        const res = await fetch(apiBase + '/distribucion/historial');
+        const historial = await res.json();
+        
+        const tbody = document.querySelector('#tabla-historial-distribuciones tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        historial.slice(0, 20).forEach(d => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${d.id}</td>
+            <td>${new Date(d.fechaDistribucion).toLocaleString()}</td>
+            <td>${d.origen.nombre}</td>
+            <td>${d.destino.nombre}</td>
+            <td>${d.recurso.tipo}</td>
+            <td>${d.cantidad}</td>
+            <td>${d.distanciaRecorrida.toFixed(2)}</td>
+            <td><span class="badge bg-success">${d.estado}</span></td>
+            <td>${d.responsable?.nombre || 'N/A'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+        
+      } catch (error) {
+        console.error('Error cargando historial:', error);
+      }
+    }
+
+    // ========================================
+    //   REPORTES Y ESTADÍSTICAS
+    // ========================================
+
+    let chartRecursosZona = null;
+    let chartRiesgos = null;
+
+    // Cargar reportes al entrar a la pestaña
+    async function cargarReportes() {
+      await cargarEstadisticasGenerales();
+      await cargarReporteRecursos();
+      await cargarEstadisticasZonasCriticas();
+    }
+
+    // Estadísticas generales (cards superiores)
+    async function cargarEstadisticasGenerales() {
+      try {
+        const res = await fetch(apiBase + '/reportes/distribuciones');
+        const data = await res.json();
+        
+        document.getElementById('stat_total_dist').textContent = data.totalDistribuciones || 0;
+        document.getElementById('stat_recursos_dist').textContent = data.totalRecursosDistribuidos || 0;
+        document.getElementById('stat_distancia').textContent = data.distanciaTotal?.toFixed(2) || '0';
+        
+      } catch (error) {
+        console.error('Error cargando estadísticas generales:', error);
+      }
+    }
+
+    // Reporte detallado de recursos
+    async function cargarReporteRecursos() {
+      try {
+        const res = await fetch(apiBase + '/reportes/recursos-por-zona');
+        const reporte = await res.json();
+        
+        const tbody = document.querySelector('#tabla-reporte-recursos tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        // Preparar datos para gráfico
+        const labelsGrafico = [];
+        const dataDisponibles = [];
+        const dataNecesarios = [];
+        
+        reporte.forEach(r => {
+          const tr = document.createElement('tr');
+          const balance = r.disponibles - r.necesarios;
+          const balanceClass = balance >= 0 ? 'text-success' : 'text-danger';
+          
+          tr.innerHTML = `
+            <td>${r.ubicacionNombre}</td>
+            <td>${r.tipoRecurso}</td>
+            <td>${r.disponibles}</td>
+            <td>${r.necesarios}</td>
+            <td><span class="badge ${getBadgeClass(r.nivelRiesgo)}">${r.nivelRiesgo}</span></td>
+            <td class="${balanceClass}">${balance > 0 ? '+' : ''}${balance}</td>
+          `;
+          tbody.appendChild(tr);
+          
+          // Acumular para gráfico
+          const key = `${r.ubicacionNombre}`;
+          if (!labelsGrafico.includes(key)) {
+            labelsGrafico.push(key);
+            dataDisponibles.push(r.disponibles);
+            dataNecesarios.push(r.necesarios);
+          } else {
+            const idx = labelsGrafico.indexOf(key);
+            dataDisponibles[idx] += r.disponibles;
+            dataNecesarios[idx] += r.necesarios;
+          }
+        });
+        
+        // Crear gráfico
+        crearGraficoRecursos(labelsGrafico.slice(0, 10), dataDisponibles.slice(0, 10), dataNecesarios.slice(0, 10));
+        
+      } catch (error) {
+        console.error('Error cargando reporte de recursos:', error);
+      }
+    }
+
+    // Estadísticas de zonas críticas
+    async function cargarEstadisticasZonasCriticas() {
+      try {
+        const res = await fetch(apiBase + '/reportes/zonas-criticas');
+        const data = await res.json();
+        
+        document.getElementById('stat_zonas_criticas').textContent = 
+          (data.distribucionRiesgo?.CRITICO || 0) + (data.distribucionRiesgo?.ALTO || 0);
+        
+        // Crear gráfico de riesgos
+        crearGraficoRiesgos(data.distribucionRiesgo);
+        
+      } catch (error) {
+        console.error('Error cargando estadísticas de zonas críticas:', error);
+      }
+    }
+
+    // Crear gráfico de recursos por zona
+    function crearGraficoRecursos(labels, disponibles, necesarios) {
+      const ctx = document.getElementById('chart-recursos-zona');
+      if (!ctx) return;
+      
+      if (chartRecursosZona) {
+        chartRecursosZona.destroy();
+      }
+      
+      chartRecursosZona = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Disponibles',
+              data: disponibles,
+              backgroundColor: 'rgba(40, 167, 69, 0.7)'
+            },
+            {
+              label: 'Necesarios',
+              data: necesarios,
+              backgroundColor: 'rgba(220, 53, 69, 0.7)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Crear gráfico de distribución de riesgos
+    function crearGraficoRiesgos(distribucion) {
+      const ctx = document.getElementById('chart-riesgos');
+      if (!ctx) return;
+      
+      if (chartRiesgos) {
+        chartRiesgos.destroy();
+      }
+      
+      chartRiesgos = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(distribucion || {}),
+          datasets: [{
+            data: Object.values(distribucion || {}),
+            backgroundColor: [
+              'rgba(220, 53, 69, 0.8)',   // CRITICO - rojo
+              'rgba(255, 193, 7, 0.8)',   // ALTO - amarillo
+              'rgba(13, 110, 253, 0.8)',  // MEDIO - azul
+              'rgba(40, 167, 69, 0.8)'    // BAJO - verde
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    // Exportar CSV
+    document.getElementById('btn-exportar-csv')?.addEventListener('click', async () => {
+      try {
+        const res = await fetch(apiBase + '/reportes/exportar-csv');
+        const csv = await res.text();
+        
+        // Crear archivo descargable
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reporte_recursos_' + new Date().toISOString().split('T')[0] + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        addLog('Reporte CSV exportado exitosamente');
+        Swal.fire('Éxito', 'Reporte descargado correctamente', 'success');
+        
+    } catch (error) {
+        console.error('Error exportando CSV:', error);
+        Swal.fire('Error', 'No se pudo exportar el reporte', 'error');
+      }
+    });
+
+    // ========================================
+    //   CARGA DE DATOS DE MUESTRA
+    // ========================================
+
+    document.getElementById('btn-load-sample')?.addEventListener('click', async () => {
+      const confirmacion = await Swal.fire({
+        title: '¿Cargar datos de muestra?',
+        text: 'Esto creará ubicaciones, recursos y rutas de ejemplo',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cargar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!confirmacion.isConfirmed) return;
+
+      try {
+        Swal.fire({
+          title: 'Cargando...',
+          text: 'Por favor espera',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const res = await fetch(apiBase + '/admin/cargar-muestra', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        const msg = await res.text();
+
+        if (!res.ok) {
+          throw new Error(msg);
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Datos Cargados!',
+          html: msg,
+          confirmButtonText: 'OK'
+        }).then(() => {
+          // Recargar datos en todas las pestañas
+          loadRecursos();
+          loadZonas();
+          loadUbicaciones();
+          cargarUbicacionesParaDistribucion();
+          
+          addLog('Datos de muestra cargados exitosamente');
+        });
+
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || 'No se pudieron cargar los datos'
+        });
+      }
+    });
+
+    // Botón limpiar datos
+    document.getElementById('btn-clear-data')?.addEventListener('click', async () => {
+      const confirmacion = await Swal.fire({
+        title: '⚠️ ¿ELIMINAR TODO?',
+        text: 'Esto borrará TODAS las ubicaciones, recursos y rutas. Esta acción NO se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar todo',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!confirmacion.isConfirmed) return;
+
+      try {
+        const res = await fetch(apiBase + '/admin/limpiar-datos', {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        const msg = await res.text();
+
+        if (!res.ok) {
+          throw new Error(msg);
+        }
+
+        Swal.fire('¡Eliminado!', msg, 'success').then(() => {
+          loadRecursos();
+          loadZonas();
+          loadUbicaciones();
+          addLog('Todos los datos fueron eliminados');
+        });
+
+      } catch (error) {
+        console.error('Error limpiando datos:', error);
+        Swal.fire('Error', error.message, 'error');
+      }
+    });
+
     // Inicialización
     window.addEventListener('load', () => {
       try { connectWebSocket(); } catch (e) { console.warn('WS init error', e); }
       loadRecursos();
       loadZonas();
       cargarUsuarioActual();
+
+      // Inicializar módulos de distribución
+      cargarUbicacionesParaDistribucion();
 
       // <-- LÓGICA DE 'btn-load-sample' ELIMINADA -->
 
