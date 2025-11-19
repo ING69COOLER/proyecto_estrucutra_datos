@@ -1,6 +1,7 @@
 package co.proyecto.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
 
@@ -19,7 +20,9 @@ public class Recurso {
     // 🔹 Relación con Ubicacion (muchos recursos pertenecen a una ubicación)
     @ManyToOne
     @JoinColumn(name = "ubicacion_id") // crea la columna ubicacion_id en la tabla recurso
-    @JsonIgnore
+    // Permitimos que el cliente envíe el objeto { "id": N } al crear el recurso,
+    // pero evitamos serializar la relación en las respuestas (WRITE_ONLY)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Ubicacion ubicacion;
 
     // --- Getters y Setters ---

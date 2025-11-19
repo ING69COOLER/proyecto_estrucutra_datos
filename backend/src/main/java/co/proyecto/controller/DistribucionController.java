@@ -4,6 +4,9 @@ import co.proyecto.dto.DistribucionRequest;
 import co.proyecto.dto.SugerenciaDistribucion;
 import co.proyecto.logic.DistribucionService;
 import co.proyecto.model.Distribucion;
+import co.proyecto.model.EquipoRescate;
+import co.proyecto.repository.EquipoRescateRepository;
+import co.proyecto.repository.UbicacionRepository;
 import co.proyecto.model.Usuario;
 import co.proyecto.model.enums.Rol;
 import co.proyecto.repository.DistribucionRepository;
@@ -24,12 +27,18 @@ public class DistribucionController {
     
     private final DistribucionService distribucionService;
     private final DistribucionRepository distribucionRepository;
+    private final EquipoRescateRepository equipoRescateRepository;
+    private final UbicacionRepository ubicacionRepository;
 
     @Autowired
     public DistribucionController(DistribucionService distribucionService,
-                                 DistribucionRepository distribucionRepository) {
+                                 DistribucionRepository distribucionRepository,
+                                 EquipoRescateRepository equipoRescateRepository,
+                                 UbicacionRepository ubicacionRepository) {
         this.distribucionService = distribucionService;
         this.distribucionRepository = distribucionRepository;
+        this.equipoRescateRepository = equipoRescateRepository;
+        this.ubicacionRepository = ubicacionRepository;
     }
 
     /**
@@ -114,6 +123,86 @@ public class DistribucionController {
         } catch (Exception e) {
             logger.error("Error obteniendo historial", e);
             return ResponseEntity.status(500).body("Error al obtener historial: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Listar equipos en una ubicación (por id) — usado por el frontend de distribución
+     */
+    @GetMapping("/equipos/{ubicacionId}")
+    public ResponseEntity<?> listarEquiposPorUbicacion(@PathVariable Integer ubicacionId, HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        if (usuario == null) return ResponseEntity.status(401).body("No autenticado");
+
+        try {
+            List<EquipoRescate> equipos = equipoRescateRepository.findByUbicacionId(ubicacionId);
+            return ResponseEntity.ok(equipos);
+        } catch (Exception e) {
+            logger.error("Error listando equipos por ubicacion", e);
+            return ResponseEntity.status(500).body("Error al listar equipos: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Trasladar un equipo a otra ubicación (requiere admin)
+     */
+    @PostMapping("/trasladar-equipo")
+    public ResponseEntity<?> trasladarEquipo(@RequestBody java.util.Map<String, Integer> payload, HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        if (usuario == null) return ResponseEntity.status(401).body("No autenticado");
+        if (usuario.getRol() != Rol.ADMINISTRADOR) return ResponseEntity.status(403).body("Acceso denegado");
+
+        Integer equipoId = payload.get("equipoId");
+        Integer destinoId = payload.get("destinoId");
+        if (equipoId == null || destinoId == null) return ResponseEntity.badRequest().body("Faltan parametros");
+        Integer cantidad = payload.get("cantidad"); // optional: number of miembros to trasladar
+
+        try {
+            EquipoRescate equipo = equipoRescateRepository.findById(equipoId)
+                    .orElseThrow(() -> new IllegalArgumentException("Equipo no encontrado"));
+            // Verify destino exists
+            final var destino = ubicacionRepository.findById(destinoId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ubicación destino no encontrada"));
+
+            if (cantidad == null) {
+                // full move
+                equipo.setUbicacion(destino);
+                equipoRescateRepository.save(equipo);
+                logger.info("Equipo {} trasladado a ubicacion {} por usuario {}", equipoId, destinoId, usuario.getNombre());
+                return ResponseEntity.ok(equipo);
+            } else {
+                // partial move: move 'cantidad' miembros to a new equipo in destino
+                if (cantidad <= 0) return ResponseEntity.badRequest().body("La cantidad debe ser mayor que 0");
+                if (cantidad >= equipo.getMiembros()) {
+                    // equivalent to full move
+                    equipo.setUbicacion(destino);
+                    equipoRescateRepository.save(equipo);
+                    logger.info("Equipo {} trasladado por completo a ubicacion {} por usuario {}", equipoId, destinoId, usuario.getNombre());
+                    return ResponseEntity.ok(equipo);
+                }
+
+                // Reduce miembros in original equipo
+                int restante = equipo.getMiembros() - cantidad;
+                equipo.setMiembros(restante);
+                equipoRescateRepository.save(equipo);
+
+                // Create new equipo in destino with 'cantidad' miembros
+                EquipoRescate nuevo = new EquipoRescate();
+                nuevo.setTipo(equipo.getTipo());
+                nuevo.setMiembros(cantidad);
+                nuevo.setEstado(equipo.getEstado());
+                nuevo.setUbicacion(destino);
+                equipoRescateRepository.save(nuevo);
+
+                logger.info("Se trasladaron {} miembros del equipo {} a nueva unidad {} en ubicacion {} por usuario {}",
+                        cantidad, equipoId, nuevo.getIdEquipo(), destinoId, usuario.getNombre());
+                return ResponseEntity.ok(nuevo);
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error trasladando equipo", e);
+            return ResponseEntity.status(500).body("Error al trasladar equipo: " + e.getMessage());
         }
     }
 

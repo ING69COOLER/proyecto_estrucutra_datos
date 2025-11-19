@@ -143,6 +143,7 @@
             <a href="#" class="list-group-item list-group-item-action" data-tab="eliminar-ubicacion">Eliminar Ubicación</a>
             <!-- DESPUÉS de la línea de "Eliminar Ubicación" -->
             <a href="#" class="list-group-item list-group-item-action" data-tab="distribuir-recursos">Distribuir Recursos</a>
+            <a href="#" class="list-group-item list-group-item-action" data-tab="distribuir-equipos">Distribuir Equipos</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="reportes">Reportes y Estadísticas</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
 
@@ -240,6 +241,48 @@
           </div>
         </section>
 
+        <!-- ========================================
+             SECCIÓN: DISTRIBUIR EQUIPOS (nueva pestaña)
+        ========================================= -->
+        <section id="distribuir-equipos" class="tab-section">
+          <div class="card p-3">
+            <h4 class="mb-3">Distribución de Equipos</h4>
+            <p class="text-muted">Traslada equipos de rescate entre ubicaciones.</p>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Ubicación Origen</label>
+                <select id="eq_dist_origen" class="form-select form-select-sm">
+                  <option value="">Cargando...</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Equipo</label>
+                <select id="eq_dist_equipo" class="form-select form-select-sm" disabled>
+                  <option value="">Selecciona origen primero</option>
+                </select>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label">Cantidad</label>
+                <input id="eq_dist_cantidad" type="number" class="form-control form-control-sm" min="1" value="1" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Ubicación Destino</label>
+                <select id="eq_dist_destino" class="form-select form-select-sm">
+                  <option value="">Cargando...</option>
+                </select>
+              </div>
+
+              <div class="col-12 mt-2">
+                <button id="btn-trasladar-equipo" class="btn btn-primary">Trasladar Equipo</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- ... (Sección 'panel-admin' sin cambios) ... -->
         <section id="panel-admin" class="tab-section">
           <!-- ... -->
@@ -301,6 +344,13 @@
                     <label class="form-label">Miembros</label>
                     <input id="e_miembros" type="number" value="5" class="form-control form-control-sm" />
                   </div>
+                    <div class="mb-2">
+                      <label class="form-label">Ubicación</label>
+                      <select id="e_ubicacion_select" class="form-select form-select-sm">
+                        <option value="">Selecciona una ubicación (opcional)</option>
+                      </select>
+                      <small class="text-muted">Asignar el equipo directamente a una ubicación al crearlo</small>
+                    </div>
                   <div class="d-grid">
                     <button class="btn btn-primary btn-sm" id="btn-create-team" type="button">Crear Equipo</button>
                   </div>
@@ -362,6 +412,23 @@
                 <tbody></tbody>
               </table>
             </div>
+
+            <h6 class="mt-3">Listado de Equipos de Rescate</h6>
+            <div class="table-responsive mb-3">
+              <table class="table table-sm" id="tabla-equipos">
+                <thead>
+                  <tr>
+                    <th>Tipo / Nombre</th>
+                    <th>Miembros</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            
 
             <h6 class="mt-3">Listado de Ubicaciones</h6>
             <div class="table-responsive">
@@ -513,6 +580,14 @@
                   </div>
 
                   <div class="mb-2">
+                    <label class="form-label">Equipo a Transferir</label>
+                    <select id="dist_equipo" class="form-select form-select-sm" disabled>
+                      <option value="">Selecciona primero un origen</option>
+                    </select>
+                    <small class="text-muted">(Opcional) Muestra equipos asignados a la ubicación seleccionada</small>
+                  </div>
+
+                  <div class="mb-2">
                     <label class="form-label">Cantidad</label>
                     <input id="dist_cantidad" type="number" class="form-control form-control-sm" min="1" required />
                     <small class="text-muted">Disponible: <span id="dist_disponible">-</span></small>
@@ -549,6 +624,8 @@
             </div>
 
           </div>
+
+          <!-- equipos distribution was moved to its own tab -->
 
           <!-- Historial de Distribuciones -->
           <div class="card p-3 mt-3">
@@ -778,6 +855,32 @@
         
         if (tab === "panel-admin") {
           populateLocationDropdown(); 
+          loadRecursos();
+          loadZonas();
+          loadEquipos();
+        }
+
+        // Si se entra al panel-admin, comprobar sesión y abrir modal de login si no está autenticado
+        if (tab === "panel-admin") {
+          (async () => {
+            try {
+              const chk = await fetch(apiBase + '/session/check');
+              if (!chk.ok) {
+                // Mostrar modal de login
+                try {
+                  const loginModalEl = document.getElementById('modalLogin');
+                  if (loginModalEl) {
+                    const modal = new bootstrap.Modal(loginModalEl);
+                    modal.show();
+                  }
+                } catch (e) {
+                  console.warn('No se pudo abrir modal de login automáticamente:', e);
+                }
+              }
+            } catch (e) {
+              console.warn('Error comprobando sesión:', e);
+            }
+          })();
         }
 
         if (tab === "crear-ubicacion") {
@@ -823,6 +926,15 @@
           setTimeout(() => {
             cargarUbicacionesParaDistribucion();
             cargarHistorialDistribuciones();
+          }, 100);
+        }
+
+        // Cuando se abre la pestaña DISTRIBUIR EQUIPOS, poblar selects y cargar equipos
+        if (tab === "distribuir-equipos") {
+          setTimeout(() => {
+            populateLocationDropdown();
+            cargarUbicacionesParaDistribucion();
+            loadEquipos();
           }, 100);
         }
 
@@ -1274,6 +1386,61 @@ async function guardarRuta() {
       list.prepend(li);
     }
 
+    // Pobla los dropdowns de ubicaciones en diferentes formularios (recurso, equipo, distribución equipos)
+    async function populateLocationDropdown() {
+      try {
+        const res = await fetch(apiBase + '/zonas');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const ubicaciones = await res.json();
+
+        // Selector para crear recurso
+        const selectR = document.getElementById('r_ubicacion_select');
+        if (selectR) {
+          selectR.innerHTML = '<option value="">Selecciona una ubicación</option>';
+          ubicaciones.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = `ID ${u.id}: ${u.nombre} (${u.nivelRiesgo})`;
+            selectR.appendChild(opt);
+          });
+        }
+
+        // Selector para crear equipo
+        const selectE = document.getElementById('e_ubicacion_select');
+        if (selectE) {
+          selectE.innerHTML = '<option value="">Selecciona una ubicación (opcional)</option>';
+          ubicaciones.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = `ID ${u.id}: ${u.nombre} (${u.nivelRiesgo})`;
+            selectE.appendChild(opt);
+          });
+        }
+
+        // Selects para distribuir equipos (origen/destino)
+        const eqOrigen = document.getElementById('eq_dist_origen');
+        const eqDestino = document.getElementById('eq_dist_destino');
+        if (eqOrigen && eqDestino) {
+          eqOrigen.innerHTML = '<option value="">Selecciona origen</option>';
+          eqDestino.innerHTML = '<option value="">Selecciona destino</option>';
+          ubicaciones.forEach(u => {
+            const o1 = new Option(`${u.nombre} (ID: ${u.id})`, u.id);
+            const o2 = new Option(`${u.nombre} (ID: ${u.id})`, u.id);
+            eqOrigen.appendChild(o1);
+            eqDestino.appendChild(o2);
+          });
+        }
+
+      } catch (err) {
+        console.error('Error en populateLocationDropdown:', err);
+        // Mostrar mensaje de error en cualquier select existente
+        ['r_ubicacion_select','e_ubicacion_select','eq_dist_origen','eq_dist_destino'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = '<option value="">Error al cargar ubicaciones</option>';
+        });
+      }
+    }
+
     
     // Crear recurso
   // Reemplaza el manejador document.getElementById('form-create-resource').addEventListener('submit', (e) => {...})
@@ -1322,33 +1489,197 @@ document.getElementById('form-create-resource').addEventListener('submit', (e) =
       Swal.fire('Error', 'Error al crear o asignar el recurso. Verifique la conexión.', 'error');
     });
 });
-  // Añadir en el bloque <script> principal
+    // Clicks en tabla de equipos (Eliminar)
+    document.querySelector('#tabla-equipos tbody').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'eliminar-equipo') {
+        Swal.fire({
+          title: '¿Confirmar eliminación?',
+          text: 'Este equipo será eliminado permanentemente',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          confirmButtonText: 'Sí, eliminar'
+        }).then(result => {
+          if (result.isConfirmed) {
+            fetch(apiBase + '/admin/equipos/' + id, { method: 'DELETE' })
+              .then(r => {
+                if (r.ok) {
+                  Swal.fire('Eliminado', 'Equipo eliminado correctamente', 'success');
+                  loadEquipos();
+                } else {
+                  Swal.fire('Error', 'No se pudo eliminar el equipo', 'error');
+                }
+              })
+              .catch(err => {
+                console.error('Error al eliminar equipo:', err);
+                Swal.fire('Error', 'Error al eliminar el equipo', 'error');
+              });
+          }
+        });
+      }
+    });
 
-/**
- * Carga todas las ubicaciones y llena el menú desplegable.
- */
-async function populateLocationDropdown() {
-    const select = document.getElementById('r_ubicacion_select');
-    if (!select) return;
+    // --- Listeners para distribución de equipos (panel específico) ---
+    document.getElementById('eq_dist_origen')?.addEventListener('change', async (e) => {
+      const origenId = e.target.value;
+      const selectEquipo = document.getElementById('eq_dist_equipo');
+      if (!origenId) { selectEquipo.innerHTML = '<option value="">Selecciona origen primero</option>'; selectEquipo.disabled = true; return; }
+      try {
+        const res = await fetch(apiBase + '/distribucion/equipos/' + origenId);
+        if (!res.ok) { selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>'; selectEquipo.disabled = true; return; }
+        const list = await res.json();
+        selectEquipo.innerHTML = '<option value="">Selecciona un equipo</option>';
+        if (!list || list.length === 0) { selectEquipo.innerHTML = '<option value="">No hay equipos en esta ubicación</option>'; selectEquipo.disabled = true; return; }
+        list.forEach(eq => {
+          const opt = new Option(`${eq.tipo} — Miembros:${eq.miembros} (ID:${eq.idEquipo})`, eq.idEquipo);
+          opt.setAttribute('data-miembros', eq.miembros);
+          selectEquipo.appendChild(opt);
+        });
+        selectEquipo.disabled = false;
+      } catch (err) {
+        console.error('Error cargando equipos por ubicacion:', err);
+        selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
+        selectEquipo.disabled = true;
+      }
+    });
 
-    try {
-        const res = await fetch(apiBase + '/zonas');
-        const ubicaciones = await res.json();
-        
-        select.innerHTML = '<option value="">Selecciona una ubicación</option>'; // Opción por defecto
-        
-        ubicaciones.forEach(u => {
-            const option = document.createElement('option');
-            // Guardamos el ID como valor, el nombre como texto visible
-            option.value = u.id; 
-            option.textContent = `ID ${u.id}: ${u.nombre} (${u.nivelRiesgo})`;
-            select.appendChild(option);
+    // Cuando se selecciona un equipo, limitar la cantidad según miembros disponibles
+    document.getElementById('eq_dist_equipo')?.addEventListener('change', (e) => {
+      const sel = e.target;
+      const qty = document.getElementById('eq_dist_cantidad');
+      if (!sel || !qty) return;
+      const selected = sel.options[sel.selectedIndex];
+      const miembros = parseInt(selected?.getAttribute('data-miembros') || '0');
+      qty.max = miembros > 0 ? miembros : 1;
+      if (parseInt(qty.value) > qty.max) qty.value = qty.max;
+    });
+
+    document.getElementById('btn-trasladar-equipo')?.addEventListener('click', async () => {
+      const equipoId = parseInt(document.getElementById('eq_dist_equipo').value);
+      const destinoId = parseInt(document.getElementById('eq_dist_destino').value);
+      const cantidad = parseInt(document.getElementById('eq_dist_cantidad')?.value) || null;
+      if (!equipoId || !destinoId) { Swal.fire('Aviso', 'Selecciona origen, equipo y destino', 'warning'); return; }
+      try {
+        const body = { equipoId: equipoId, destinoId: destinoId };
+        if (cantidad && cantidad > 0) body.cantidad = cantidad;
+        const res = await fetch(apiBase + '/distribucion/trasladar-equipo', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) { const txt = await res.text(); throw new Error(txt || ('HTTP ' + res.status)); }
+        const moved = await res.json();
+        Swal.fire('Éxito', `Equipo trasladado: ${moved.tipo} (ID:${moved.idEquipo})`, 'success');
+        addLog(`Equipo trasladado: ID ${moved.idEquipo} a ubicacion ${destinoId}`);
+        // refrescar selects y tablas
+        cargarUbicacionesParaDistribucion();
+        loadEquipos();
+      } catch (err) {
+        console.error('Error trasladando equipo (btn):', err);
+        Swal.fire('Error', err.message || 'No se pudo trasladar equipo', 'error');
+      }
+    });
+    // Botón crear equipo: construir payload y llamar al endpoint
+    document.getElementById('btn-create-team')?.addEventListener('click', async () => {
+      try {
+        const nombre = document.getElementById('e_nombre').value;
+        const tipoSelect = document.getElementById('e_tipo').value;
+        const miembros = parseInt(document.getElementById('e_miembros').value) || 0;
+        const tipo = (nombre && nombre.trim() !== '') ? nombre.trim() : tipoSelect;
+        const ubicacionId = document.getElementById('e_ubicacion_select') ? document.getElementById('e_ubicacion_select').value : '';
+
+        const payload = { tipo: tipo, miembros: miembros, estado: 'DISPONIBLE' };
+        if (ubicacionId) payload.ubicacion = { id: +ubicacionId };
+
+        const res = await fetch(apiBase + '/admin/equipos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
 
-    } catch (error) {
-        console.error('Error cargando ubicaciones para el dropdown:', error);
-        select.innerHTML = '<option value="">Error al cargar ubicaciones</option>';
+        if (res.status === 401 || res.status === 403) {
+          Swal.fire('Sin sesión', 'Debes iniciar sesión como administrador para crear equipos.', 'warning');
+          return;
+        }
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || ('HTTP ' + res.status));
+        }
+
+        const saved = await res.json();
+        addLog('Equipo creado: ' + (saved.tipo || tipo) + ' (miembros: ' + saved.miembros + ')');
+        Swal.fire('Éxito', 'Equipo de rescate creado correctamente.', 'success');
+        // Limpiar formulario
+        document.getElementById('e_nombre').value = '';
+        document.getElementById('e_tipo').value = 'BOMBEROS';
+        document.getElementById('e_miembros').value = '5';
+        if (document.getElementById('e_ubicacion_select')) document.getElementById('e_ubicacion_select').value = '';
+        // Recargar lista de equipos (si hay UI para mostrarla)
+        loadEquipos();
+
+      } catch (error) {
+        console.error('Error creando equipo:', error);
+        Swal.fire('Error', 'No se pudo crear el equipo: ' + (error.message || ''), 'error');
+      }
+    });
+
+// Cargar equipos (se usa para depuración y, si se desea, para mostrar en UI)
+async function loadEquipos() {
+  try {
+    // Verificar sesión primero
+    const check = await fetch(apiBase + '/session/check');
+    if (!check.ok) {
+      // No autenticado -> mostrar mensaje en la tabla
+      const tbody = document.querySelector('#tabla-equipos tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Inicie sesión como administrador para ver los equipos</td></tr>';
+      }
+      return [];
     }
+
+    const res = await fetch(apiBase + '/admin/equipos');
+    if (!res.ok) {
+      console.warn('No se pudieron cargar equipos, estado:', res.status);
+      const tbody = document.querySelector('#tabla-equipos tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No se pudieron cargar los equipos</td></tr>';
+      return [];
+    }
+    const list = await res.json();
+    console.log('Equipos:', list);
+    addLog('Equipos cargados: ' + list.length);
+
+    // Rellenar tabla de equipos
+    const tbody = document.querySelector('#tabla-equipos tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay equipos registrados</td></tr>';
+      } else {
+        list.forEach(eq => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${eq.tipo || ''}</td>
+            <td>${eq.miembros || 0}</td>
+            <td>${eq.estado || ''}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-danger" data-id="${eq.idEquipo}" data-action="eliminar-equipo">Eliminar</button>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    return list;
+  } catch (e) {
+    console.error('Error cargando equipos:', e);
+    const tbody = document.querySelector('#tabla-equipos tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Error cargando equipos</td></tr>';
+    return [];
+  }
 }
 
     // Crear ubicación
@@ -1436,7 +1767,6 @@ async function populateLocationDropdown() {
               <td>${r.cantidad}</td>
               <td>${r.disponible ? 'Sí' : 'No'}</td>
               <td>
-                <button class="btn btn-sm btn-outline-primary" data-id="${r.id}" data-action="asignar">Asignar</button>
                 <button class="btn btn-sm btn-outline-danger" data-id="${r.id}" data-action="eliminar">Eliminar</button>
               </td>`;
             tbody.appendChild(tr);
@@ -1487,6 +1817,85 @@ async function populateLocationDropdown() {
                 console.error('Error al eliminar:', err);
                 Swal.fire('Error', 'Error al eliminar el recurso', 'error');
               });
+          }
+        });
+      }
+    });
+
+    // Clicks en tabla de equipos (Eliminar)
+    document.querySelector('#tabla-equipos tbody').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'eliminar-equipo') {
+        Swal.fire({
+          title: '¿Confirmar eliminación?',
+          text: 'Este equipo será eliminado permanentemente',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          confirmButtonText: 'Sí, eliminar'
+        }).then(result => {
+          if (result.isConfirmed) {
+            fetch(apiBase + '/admin/equipos/' + id, { method: 'DELETE' })
+              .then(r => {
+                if (r.ok) {
+                  Swal.fire('Eliminado', 'Equipo eliminado correctamente', 'success');
+                  loadEquipos();
+                } else {
+                  Swal.fire('Error', 'No se pudo eliminar el equipo', 'error');
+                }
+              })
+              .catch(err => {
+                console.error('Error al eliminar equipo:', err);
+                Swal.fire('Error', 'Error al eliminar el equipo', 'error');
+              });
+          }
+        });
+
+        // --- Nuevos listeners para distribución de equipos (panel específico) ---
+        document.getElementById('eq_dist_origen')?.addEventListener('change', async (e) => {
+          const origenId = e.target.value;
+          const selectEquipo = document.getElementById('eq_dist_equipo');
+          if (!origenId) { selectEquipo.innerHTML = '<option value="">Selecciona origen primero</option>'; selectEquipo.disabled = true; return; }
+          try {
+            const res = await fetch(apiBase + '/distribucion/equipos/' + origenId);
+            if (!res.ok) { selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>'; selectEquipo.disabled = true; return; }
+            const list = await res.json();
+            selectEquipo.innerHTML = '<option value="">Selecciona un equipo</option>';
+            if (!list || list.length === 0) { selectEquipo.innerHTML = '<option value="">No hay equipos en esta ubicación</option>'; selectEquipo.disabled = true; return; }
+            list.forEach(eq => {
+              const opt = new Option(`${eq.tipo} — Miembros:${eq.miembros} (ID:${eq.idEquipo})`, eq.idEquipo);
+              selectEquipo.appendChild(opt);
+            });
+            selectEquipo.disabled = false;
+          } catch (err) {
+            console.error('Error cargando equipos por ubicacion:', err);
+            selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
+            selectEquipo.disabled = true;
+          }
+        });
+
+        document.getElementById('btn-trasladar-equipo')?.addEventListener('click', async () => {
+          const equipoId = parseInt(document.getElementById('eq_dist_equipo').value);
+          const destinoId = parseInt(document.getElementById('eq_dist_destino').value);
+          if (!equipoId || !destinoId) { Swal.fire('Aviso', 'Selecciona origen, equipo y destino', 'warning'); return; }
+          try {
+            const res = await fetch(apiBase + '/distribucion/trasladar-equipo', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ equipoId: equipoId, destinoId: destinoId })
+            });
+            if (!res.ok) { const txt = await res.text(); throw new Error(txt || ('HTTP ' + res.status)); }
+            const moved = await res.json();
+            Swal.fire('Éxito', `Equipo trasladado: ${moved.tipo} (ID:${moved.idEquipo})`, 'success');
+            addLog(`Equipo trasladado: ID ${moved.idEquipo} a ubicacion ${destinoId}`);
+            // refrescar selects y tablas
+            cargarUbicacionesParaDistribucion();
+            loadEquipos();
+          } catch (err) {
+            console.error('Error trasladando equipo (btn):', err);
+            Swal.fire('Error', err.message || 'No se pudo trasladar equipo', 'error');
           }
         });
       }
@@ -1597,14 +2006,28 @@ async function populateLocationDropdown() {
           selectDestino.innerHTML = '<option value="">Selecciona destino</option>';
           selectSugerenciaDestino.innerHTML = '<option value="">Selecciona destino crítico</option>';
           
-          ubicaciones.forEach(u => {
-            const optionOrigen = new Option(`${u.nombre} (ID: ${u.id})`, u.id);
-            const optionDestino = new Option(`${u.nombre} (${u.nivelRiesgo})`, u.id);
-            const optionSugerencia = new Option(`${u.nombre} (${u.nivelRiesgo})`, u.id);
-            
+            ubicaciones.forEach(u => {
+            // Construir resumen de recursos disponibles (tipo: cantidad)
+            let resumenRecursos = '';
+            try {
+                const recursos = u.recursosDisponibles || u.recursos || [];
+                if (recursos && recursos.length > 0) {
+                    resumenRecursos = recursos.map(r => `${r.tipo}:${r.cantidad}`).join(', ');
+                }
+            } catch (e) {
+                console.warn('No se pudo generar resumen de recursos para zona', u.id, e);
+            }
+
+            const textoBase = `${u.nombre} (ID: ${u.id})`;
+            const textoDestino = `${u.nombre} (${u.nivelRiesgo})`;
+
+            const optionOrigen = new Option(resumenRecursos ? `${textoBase} — ${resumenRecursos}` : textoBase, u.id);
+            const optionDestino = new Option(resumenRecursos ? `${textoDestino} — ${resumenRecursos}` : textoDestino, u.id);
+            const optionSugerencia = new Option(resumenRecursos ? `${textoDestino} — ${resumenRecursos}` : textoDestino, u.id);
+
             selectOrigen.appendChild(optionOrigen.cloneNode(true));
             selectDestino.appendChild(optionDestino.cloneNode(true));
-            
+
             // Solo críticas/altas en sugerencias
             if (u.nivelRiesgo === 'CRITICO' || u.nivelRiesgo === 'ALTO') {
               selectSugerenciaDestino.appendChild(optionSugerencia);
@@ -1620,10 +2043,12 @@ async function populateLocationDropdown() {
     document.getElementById('dist_origen')?.addEventListener('change', async (e) => {
       const origenId = e.target.value;
       const selectRecurso = document.getElementById('dist_recurso');
+      const selectEquipo = document.getElementById('dist_equipo');
       
       if (!origenId) {
         selectRecurso.disabled = true;
         selectRecurso.innerHTML = '<option value="">Selecciona primero un origen</option>';
+        if (selectEquipo) { selectEquipo.disabled = true; selectEquipo.innerHTML = '<option value="">Selecciona primero un origen</option>'; }
         return;
       }
       
@@ -1638,17 +2063,44 @@ async function populateLocationDropdown() {
         if (recursosDelOrigen.length === 0) {
           selectRecurso.innerHTML = '<option value="">No hay recursos disponibles</option>';
           selectRecurso.disabled = true;
-          return;
+        } else {
+          recursosDelOrigen.forEach(r => {
+            if (r.cantidad > 0) {
+              const option = new Option(`${r.tipo} (${r.nombre}) - Cant: ${r.cantidad}`, r.id);
+              selectRecurso.appendChild(option);
+            }
+          });
+          selectRecurso.disabled = false;
         }
-        
-        recursosDelOrigen.forEach(r => {
-          if (r.cantidad > 0) {
-            const option = new Option(`${r.tipo} (${r.nombre}) - Cant: ${r.cantidad}`, r.id);
-            selectRecurso.appendChild(option);
+
+        // Cargar equipos asignados a esta ubicación y llenar selectEquipo
+        if (selectEquipo) {
+          try {
+            const respEq = await fetch(apiBase + '/distribucion/equipos/' + origenId);
+            if (respEq.ok) {
+              const equipos = await respEq.json();
+              selectEquipo.innerHTML = '<option value="">Selecciona un equipo (opcional)</option>';
+              if (!equipos || equipos.length === 0) {
+                selectEquipo.innerHTML = '<option value="">No hay equipos asignados</option>';
+                selectEquipo.disabled = true;
+              } else {
+                equipos.forEach(eq => {
+                  const txt = `${eq.tipo} — Miembros:${eq.miembros} (ID:${eq.idEquipo})`;
+                  const opt = new Option(txt, eq.idEquipo);
+                  selectEquipo.appendChild(opt);
+                });
+                selectEquipo.disabled = false;
+              }
+            } else {
+              selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
+              selectEquipo.disabled = true;
+            }
+          } catch (err) {
+            console.error('Error cargando equipos por ubicacion:', err);
+            selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
+            selectEquipo.disabled = true;
           }
-        });
-        
-        selectRecurso.disabled = false;
+        }
         
       } catch (error) {
         console.error('Error cargando recursos del origen:', error);
@@ -1676,13 +2128,45 @@ async function populateLocationDropdown() {
     document.getElementById('form-distribucion-manual')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      const origenId = parseInt(document.getElementById('dist_origen').value);
+      const destinoId = parseInt(document.getElementById('dist_destino').value);
+      const recursoId = parseInt(document.getElementById('dist_recurso').value) || null;
+      const cantidad = parseInt(document.getElementById('dist_cantidad').value) || 0;
+      const equipoId = parseInt(document.getElementById('dist_equipo').value) || null;
+
+      // Si se seleccionó un equipo (y no un recurso), realizamos traslado de equipo
+      if (equipoId && !recursoId) {
+        try {
+          const res = await fetch(apiBase + '/distribucion/trasladar-equipo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ equipoId: equipoId, destinoId: destinoId })
+          });
+
+          if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || ('HTTP ' + res.status));
+          }
+
+          const moved = await res.json();
+          Swal.fire('Éxito', `Equipo trasladado: ${moved.tipo} (ID:${moved.idEquipo})`, 'success');
+          addLog(`Equipo trasladado: ID ${moved.idEquipo} a ubicacion ${destinoId}`);
+          cargarUbicacionesParaDistribucion();
+          return;
+        } catch (err) {
+          console.error('Error trasladando equipo:', err);
+          Swal.fire('Error', err.message || 'No se pudo trasladar equipo', 'error');
+          return;
+        }
+      }
+
       const payload = {
-        origenId: parseInt(document.getElementById('dist_origen').value),
-        destinoId: parseInt(document.getElementById('dist_destino').value),
-        recursoId: parseInt(document.getElementById('dist_recurso').value),
-        cantidad: parseInt(document.getElementById('dist_cantidad').value)
+        origenId: origenId,
+        destinoId: destinoId,
+        recursoId: recursoId,
+        cantidad: cantidad
       };
-      
+
       try {
         const res = await fetch(apiBase + '/distribucion/ejecutar', {
           method: 'POST',

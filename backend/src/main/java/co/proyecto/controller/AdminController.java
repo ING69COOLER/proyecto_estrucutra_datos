@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +21,8 @@ import co.proyecto.model.enums.Rol;
 import co.proyecto.repository.RecursoRepository;
 import co.proyecto.repository.RutaRepository;
 import co.proyecto.repository.UbicacionRepository;
+import co.proyecto.repository.EquipoRescateRepository;
+import java.util.List;
 import jakarta.servlet.http.HttpSession;
 
 @RestController
@@ -30,14 +34,17 @@ public class AdminController {
     private final UbicacionRepository ubicacionRepository;
     private final RecursoRepository recursoRepository;
     private final RutaRepository rutaRepository;
+    private final EquipoRescateRepository equipoRescateRepository;
 
     @Autowired
     public AdminController(UbicacionRepository ubicacionRepository, 
                           RecursoRepository recursoRepository, 
-                          RutaRepository rutaRepository) {
+                          RutaRepository rutaRepository,
+                          EquipoRescateRepository equipoRescateRepository) {
         this.ubicacionRepository = ubicacionRepository;
         this.recursoRepository = recursoRepository;
         this.rutaRepository = rutaRepository;
+        this.equipoRescateRepository = equipoRescateRepository;
     }
 
     /**
@@ -183,6 +190,72 @@ public class AdminController {
         } catch (Exception e) {
             logger.error("Error al cargar datos de muestra", e);
             return ResponseEntity.status(500).body("❌ Error al cargar datos: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Crear un nuevo EquipoRescate (solo ADMIN)
+     */
+    @PostMapping("/equipos")
+    public ResponseEntity<?> crearEquipo(@RequestBody co.proyecto.model.EquipoRescate equipo, HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        if (usuario == null) {
+            return ResponseEntity.status(401).body("No autenticado");
+        }
+        if (usuario.getRol() != Rol.ADMINISTRADOR) {
+            return ResponseEntity.status(403).body("Acceso denegado");
+        }
+        try {
+            equipoRescateRepository.save(equipo);
+            return ResponseEntity.ok(equipo);
+        } catch (Exception e) {
+            logger.error("Error al guardar equipo de rescate", e);
+            return ResponseEntity.status(500).body("Error al guardar equipo: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Listar equipos de rescate (solo ADMIN)
+     */
+    @GetMapping("/equipos")
+    public ResponseEntity<?> listarEquipos(HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        if (usuario == null) {
+            return ResponseEntity.status(401).body("No autenticado");
+        }
+        if (usuario.getRol() != Rol.ADMINISTRADOR) {
+            return ResponseEntity.status(403).body("Acceso denegado");
+        }
+        try {
+            List<co.proyecto.model.EquipoRescate> list = equipoRescateRepository.findAll();
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            logger.error("Error al listar equipos", e);
+            return ResponseEntity.status(500).body("Error al listar equipos: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Eliminar equipo de rescate por id (solo ADMIN)
+     */
+    @DeleteMapping("/equipos/{id}")
+    public ResponseEntity<?> eliminarEquipo(@org.springframework.web.bind.annotation.PathVariable Integer id, HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        if (usuario == null) {
+            return ResponseEntity.status(401).body("No autenticado");
+        }
+        if (usuario.getRol() != Rol.ADMINISTRADOR) {
+            return ResponseEntity.status(403).body("Acceso denegado");
+        }
+        try {
+            if (!equipoRescateRepository.existsById(id)) {
+                return ResponseEntity.status(404).body("Equipo no encontrado");
+            }
+            equipoRescateRepository.deleteById(id);
+            return ResponseEntity.ok().body("Eliminado");
+        } catch (Exception e) {
+            logger.error("Error al eliminar equipo", e);
+            return ResponseEntity.status(500).body("Error al eliminar equipo: " + e.getMessage());
         }
     }
 
