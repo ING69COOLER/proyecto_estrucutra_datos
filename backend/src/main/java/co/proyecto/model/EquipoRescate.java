@@ -18,7 +18,8 @@ public class EquipoRescate {
     // Relación opcional a Ubicacion: cada equipo puede pertenecer a una ubicación
     @ManyToOne
     @JoinColumn(name = "ubicacion_id")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    // Allow read and write: frontend can send {ubicacion:{id}} and responses include ubicacion
+    @JsonProperty(access = JsonProperty.Access.READ_WRITE)
     private Ubicacion ubicacion;
 
     public int getIdEquipo() {

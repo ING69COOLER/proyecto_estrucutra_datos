@@ -281,6 +281,26 @@
               </div>
             </div>
           </div>
+          <!-- Tabla de equipos (lista similar a la de recursos) -->
+          <div class="card p-3 mt-3">
+            <h5>Equipos Registrados</h5>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped" id="tabla-equipos">
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Miembros</th>
+                    <th>Ubicación</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5" class="text-center text-muted">Cargando equipos...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
         <!-- ... (Sección 'panel-admin' sin cambios) ... -->
@@ -579,13 +599,7 @@
                     </select>
                   </div>
 
-                  <div class="mb-2">
-                    <label class="form-label">Equipo a Transferir</label>
-                    <select id="dist_equipo" class="form-select form-select-sm" disabled>
-                      <option value="">Selecciona primero un origen</option>
-                    </select>
-                    <small class="text-muted">(Opcional) Muestra equipos asignados a la ubicación seleccionada</small>
-                  </div>
+                  <!-- Equipo transfer removed from this form; use 'Distribuir Equipos' tab -->
 
                   <div class="mb-2">
                     <label class="form-label">Cantidad</label>
@@ -1489,13 +1503,14 @@ document.getElementById('form-create-resource').addEventListener('submit', (e) =
       Swal.fire('Error', 'Error al crear o asignar el recurso. Verifique la conexión.', 'error');
     });
 });
-    // Clicks en tabla de equipos (Eliminar)
-    document.querySelector('#tabla-equipos tbody').addEventListener('click', (e) => {
+    // Delegación global para botones con data-action (incluye eliminar-equipo)
+    document.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn) return;
-      const id = btn.dataset.id;
       const action = btn.dataset.action;
+      // Eliminar equipo
       if (action === 'eliminar-equipo') {
+        const id = btn.dataset.id;
         Swal.fire({
           title: '¿Confirmar eliminación?',
           text: 'Este equipo será eliminado permanentemente',
@@ -1633,10 +1648,15 @@ async function loadEquipos() {
     // Verificar sesión primero
     const check = await fetch(apiBase + '/session/check');
     if (!check.ok) {
-      // No autenticado -> mostrar mensaje en la tabla
-      const tbody = document.querySelector('#tabla-equipos tbody');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Inicie sesión como administrador para ver los equipos</td></tr>';
+      // No autenticado -> mostrar mensaje en la(s) tabla(s)
+      const tables = document.querySelectorAll('#tabla-equipos');
+      if (tables && tables.length > 0) {
+        tables.forEach(table => {
+          const tbody = table.querySelector('tbody');
+          const thCount = table.querySelectorAll('thead th').length || 5;
+          if (!tbody) return;
+          tbody.innerHTML = `<tr><td colspan="${thCount}" class="text-center text-muted">Inicie sesión como administrador para ver los equipos</td></tr>`;
+        });
       }
       return [];
     }
@@ -1645,39 +1665,66 @@ async function loadEquipos() {
     if (!res.ok) {
       console.warn('No se pudieron cargar equipos, estado:', res.status);
       const tbody = document.querySelector('#tabla-equipos tbody');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No se pudieron cargar los equipos</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No se pudieron cargar los equipos</td></tr>';
       return [];
     }
     const list = await res.json();
     console.log('Equipos:', list);
     addLog('Equipos cargados: ' + list.length);
 
-    // Rellenar tabla de equipos
-    const tbody = document.querySelector('#tabla-equipos tbody');
-    if (tbody) {
-      tbody.innerHTML = '';
-      if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay equipos registrados</td></tr>';
-      } else {
-        list.forEach(eq => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${eq.tipo || ''}</td>
-            <td>${eq.miembros || 0}</td>
-            <td>${eq.estado || ''}</td>
-            <td>
-              <button class="btn btn-sm btn-outline-danger" data-id="${eq.idEquipo}" data-action="eliminar-equipo">Eliminar</button>
-            </td>`;
-          tbody.appendChild(tr);
-        });
-      }
+    // Rellenar todas las tablas que tengan id 'tabla-equipos' (evita problemas si hay duplicados en el DOM)
+    const tables = document.querySelectorAll('#tabla-equipos');
+    if (tables && tables.length > 0) {
+      tables.forEach(table => {
+        const tbody = table.querySelector('tbody');
+        const thCount = table.querySelectorAll('thead th').length || 5;
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="${thCount}" class="text-center text-muted">No hay equipos registrados</td></tr>`;
+        } else {
+          list.forEach(eq => {
+            const tr = document.createElement('tr');
+            const ubicacionNombre = (eq.ubicacion && eq.ubicacion.nombre) ? eq.ubicacion.nombre : '';
+            const estadoHtml = (eq.ubicacion) ? `<span class="badge bg-warning text-dark">MISION</span>` : (eq.estado || '');
+            // Generar columnas dependiendo del número de cabezeras (compatibilidad simple)
+            if (thCount >= 5) {
+              tr.innerHTML = `
+                <td>${eq.tipo || ''}</td>
+                <td>${eq.miembros || 0}</td>
+                <td>${ubicacionNombre}</td>
+                <td>${estadoHtml}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" data-id="${eq.idEquipo}" data-action="eliminar-equipo">Eliminar</button>
+                </td>`;
+            } else {
+              // versión compacta (panel-admin)
+              tr.innerHTML = `
+                <td>${eq.tipo || ''}</td>
+                <td>${eq.miembros || 0}</td>
+                <td>${estadoHtml}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" data-id="${eq.idEquipo}" data-action="eliminar-equipo">Eliminar</button>
+                </td>`;
+            }
+            tbody.appendChild(tr);
+          });
+        }
+      });
     }
 
     return list;
   } catch (e) {
     console.error('Error cargando equipos:', e);
-    const tbody = document.querySelector('#tabla-equipos tbody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Error cargando equipos</td></tr>';
+    const tables = document.querySelectorAll('#tabla-equipos');
+    if (tables && tables.length > 0) {
+      tables.forEach(table => {
+        const tbody = table.querySelector('tbody');
+        const thCount = table.querySelectorAll('thead th').length || 4;
+        if (!tbody) return;
+        tbody.innerHTML = `<tr><td colspan="${thCount}" class="text-center text-muted">Error cargando equipos</td></tr>`;
+      });
+    }
     return [];
   }
 }
@@ -1822,82 +1869,48 @@ async function loadEquipos() {
       }
     });
 
-    // Clicks en tabla de equipos (Eliminar)
-    document.querySelector('#tabla-equipos tbody').addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action]');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const action = btn.dataset.action;
-      if (action === 'eliminar-equipo') {
-        Swal.fire({
-          title: '¿Confirmar eliminación?',
-          text: 'Este equipo será eliminado permanentemente',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#d33',
-          confirmButtonText: 'Sí, eliminar'
-        }).then(result => {
-          if (result.isConfirmed) {
-            fetch(apiBase + '/admin/equipos/' + id, { method: 'DELETE' })
-              .then(r => {
-                if (r.ok) {
-                  Swal.fire('Eliminado', 'Equipo eliminado correctamente', 'success');
-                  loadEquipos();
-                } else {
-                  Swal.fire('Error', 'No se pudo eliminar el equipo', 'error');
-                }
-              })
-              .catch(err => {
-                console.error('Error al eliminar equipo:', err);
-                Swal.fire('Error', 'Error al eliminar el equipo', 'error');
-              });
-          }
+    // Listeners para distribución de equipos (se registran siempre, no anidados)
+    document.getElementById('eq_dist_origen')?.addEventListener('change', async (e) => {
+      const origenId = e.target.value;
+      const selectEquipo = document.getElementById('eq_dist_equipo');
+      if (!origenId) { selectEquipo.innerHTML = '<option value="">Selecciona origen primero</option>'; selectEquipo.disabled = true; return; }
+      try {
+        const res = await fetch(apiBase + '/distribucion/equipos/' + origenId);
+        if (!res.ok) { selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>'; selectEquipo.disabled = true; return; }
+        const list = await res.json();
+        selectEquipo.innerHTML = '<option value="">Selecciona un equipo</option>';
+        if (!list || list.length === 0) { selectEquipo.innerHTML = '<option value="">No hay equipos en esta ubicación</option>'; selectEquipo.disabled = true; return; }
+        list.forEach(eq => {
+          const opt = new Option(`${eq.tipo} — Miembros:${eq.miembros} (ID:${eq.idEquipo})`, eq.idEquipo);
+          selectEquipo.appendChild(opt);
         });
+        selectEquipo.disabled = false;
+      } catch (err) {
+        console.error('Error cargando equipos por ubicacion:', err);
+        selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
+        selectEquipo.disabled = true;
+      }
+    });
 
-        // --- Nuevos listeners para distribución de equipos (panel específico) ---
-        document.getElementById('eq_dist_origen')?.addEventListener('change', async (e) => {
-          const origenId = e.target.value;
-          const selectEquipo = document.getElementById('eq_dist_equipo');
-          if (!origenId) { selectEquipo.innerHTML = '<option value="">Selecciona origen primero</option>'; selectEquipo.disabled = true; return; }
-          try {
-            const res = await fetch(apiBase + '/distribucion/equipos/' + origenId);
-            if (!res.ok) { selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>'; selectEquipo.disabled = true; return; }
-            const list = await res.json();
-            selectEquipo.innerHTML = '<option value="">Selecciona un equipo</option>';
-            if (!list || list.length === 0) { selectEquipo.innerHTML = '<option value="">No hay equipos en esta ubicación</option>'; selectEquipo.disabled = true; return; }
-            list.forEach(eq => {
-              const opt = new Option(`${eq.tipo} — Miembros:${eq.miembros} (ID:${eq.idEquipo})`, eq.idEquipo);
-              selectEquipo.appendChild(opt);
-            });
-            selectEquipo.disabled = false;
-          } catch (err) {
-            console.error('Error cargando equipos por ubicacion:', err);
-            selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
-            selectEquipo.disabled = true;
-          }
+    document.getElementById('btn-trasladar-equipo')?.addEventListener('click', async () => {
+      const equipoId = parseInt(document.getElementById('eq_dist_equipo').value);
+      const destinoId = parseInt(document.getElementById('eq_dist_destino').value);
+      if (!equipoId || !destinoId) { Swal.fire('Aviso', 'Selecciona origen, equipo y destino', 'warning'); return; }
+      try {
+        const res = await fetch(apiBase + '/distribucion/trasladar-equipo', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ equipoId: equipoId, destinoId: destinoId })
         });
-
-        document.getElementById('btn-trasladar-equipo')?.addEventListener('click', async () => {
-          const equipoId = parseInt(document.getElementById('eq_dist_equipo').value);
-          const destinoId = parseInt(document.getElementById('eq_dist_destino').value);
-          if (!equipoId || !destinoId) { Swal.fire('Aviso', 'Selecciona origen, equipo y destino', 'warning'); return; }
-          try {
-            const res = await fetch(apiBase + '/distribucion/trasladar-equipo', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ equipoId: equipoId, destinoId: destinoId })
-            });
-            if (!res.ok) { const txt = await res.text(); throw new Error(txt || ('HTTP ' + res.status)); }
-            const moved = await res.json();
-            Swal.fire('Éxito', `Equipo trasladado: ${moved.tipo} (ID:${moved.idEquipo})`, 'success');
-            addLog(`Equipo trasladado: ID ${moved.idEquipo} a ubicacion ${destinoId}`);
-            // refrescar selects y tablas
-            cargarUbicacionesParaDistribucion();
-            loadEquipos();
-          } catch (err) {
-            console.error('Error trasladando equipo (btn):', err);
-            Swal.fire('Error', err.message || 'No se pudo trasladar equipo', 'error');
-          }
-        });
+        if (!res.ok) { const txt = await res.text(); throw new Error(txt || ('HTTP ' + res.status)); }
+        const moved = await res.json();
+        Swal.fire('Éxito', `Equipo trasladado: ${moved.tipo} (ID:${moved.idEquipo})`, 'success');
+        addLog(`Equipo trasladado: ID ${moved.idEquipo} a ubicacion ${destinoId}`);
+        // refrescar selects y tablas
+        cargarUbicacionesParaDistribucion();
+        loadEquipos();
+      } catch (err) {
+        console.error('Error trasladando equipo (btn):', err);
+        Swal.fire('Error', err.message || 'No se pudo trasladar equipo', 'error');
       }
     });
 
@@ -2043,12 +2056,10 @@ async function loadEquipos() {
     document.getElementById('dist_origen')?.addEventListener('change', async (e) => {
       const origenId = e.target.value;
       const selectRecurso = document.getElementById('dist_recurso');
-      const selectEquipo = document.getElementById('dist_equipo');
       
       if (!origenId) {
         selectRecurso.disabled = true;
         selectRecurso.innerHTML = '<option value="">Selecciona primero un origen</option>';
-        if (selectEquipo) { selectEquipo.disabled = true; selectEquipo.innerHTML = '<option value="">Selecciona primero un origen</option>'; }
         return;
       }
       
@@ -2073,34 +2084,7 @@ async function loadEquipos() {
           selectRecurso.disabled = false;
         }
 
-        // Cargar equipos asignados a esta ubicación y llenar selectEquipo
-        if (selectEquipo) {
-          try {
-            const respEq = await fetch(apiBase + '/distribucion/equipos/' + origenId);
-            if (respEq.ok) {
-              const equipos = await respEq.json();
-              selectEquipo.innerHTML = '<option value="">Selecciona un equipo (opcional)</option>';
-              if (!equipos || equipos.length === 0) {
-                selectEquipo.innerHTML = '<option value="">No hay equipos asignados</option>';
-                selectEquipo.disabled = true;
-              } else {
-                equipos.forEach(eq => {
-                  const txt = `${eq.tipo} — Miembros:${eq.miembros} (ID:${eq.idEquipo})`;
-                  const opt = new Option(txt, eq.idEquipo);
-                  selectEquipo.appendChild(opt);
-                });
-                selectEquipo.disabled = false;
-              }
-            } else {
-              selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
-              selectEquipo.disabled = true;
-            }
-          } catch (err) {
-            console.error('Error cargando equipos por ubicacion:', err);
-            selectEquipo.innerHTML = '<option value="">Error cargando equipos</option>';
-            selectEquipo.disabled = true;
-          }
-        }
+        // (Removed equipment-loading from resource distribution here — use the 'Distribuir Equipos' tab.)
         
       } catch (error) {
         console.error('Error cargando recursos del origen:', error);
