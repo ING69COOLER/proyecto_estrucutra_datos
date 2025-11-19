@@ -108,6 +108,8 @@
             <a href="#" class="list-group-item list-group-item-action active" data-tab="inicio">Inicio</a>
             <!-- 👇 NUEVO: Panel Rutas visible para OPERADOR -->
             <a href="#" class="list-group-item list-group-item-action" data-tab="panel-rutas">Panel Rutas</a>
+            <!-- 👇 NUEVO: Simulación de Evacuación -->
+            <a href="#" class="list-group-item list-group-item-action" data-tab="simulacion-evacuacion">Simulación Evacuación</a>
             <!-- DESPUÉS de "Panel Rutas" -->
             <a href="#" class="list-group-item list-group-item-action" data-tab="reportes-operador">Reportes</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
@@ -240,6 +242,98 @@
               </div>
             </div>
 
+          </div>
+        </section>
+
+        <!-- ========================================
+             SECCIÓN: SIMULACIÓN DE EVACUACIÓN
+        ========================================= -->
+        <section id="simulacion-evacuacion" class="tab-section">
+          <h4 class="mb-3">Simulación de Evacuación</h4>
+          <p class="text-muted">Simula la evacuación de personas desde una ubicación de origen hacia ubicaciones seguras.</p>
+
+          <div class="row g-3">
+            
+            <!-- Formulario Manual de Evacuación -->
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Evacuación Manual</h5>
+                
+                <form id="form-evacuacion-manual">
+                  <div class="mb-2">
+                    <label class="form-label">Ubicación Origen (en riesgo)</label>
+                    <select id="evac_origen" class="form-select form-select-sm" required>
+                      <option value="">Cargando...</option>
+                    </select>
+                    <small class="text-muted">Personas a evacuar: <span id="evac_personas_origen">-</span></small>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label">Ubicación Destino (segura)</label>
+                    <select id="evac_destino" class="form-select form-select-sm" required>
+                      <option value="">Cargando...</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label">Cantidad de Personas</label>
+                    <input id="evac_cantidad" type="number" class="form-control form-control-sm" min="1" required />
+                    <small class="text-muted">Máximo disponible: <span id="evac_max_personas">-</span></small>
+                  </div>
+
+                  <button type="submit" class="btn btn-success w-100">
+                    <i class="fa fa-person-walking"></i> Ejecutar Evacuación
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Panel de Sugerencias de Rutas -->
+            <div class="col-md-6">
+              <div class="card p-3">
+                <h5>Rutas Sugeridas (Grafo)</h5>
+                <p class="small text-muted">El sistema calcula rutas mínimas desde el origen hacia el destino.</p>
+
+                <div class="mb-2">
+                  <label class="form-label">Destino para Rutas</label>
+                  <select id="evac_sugerencia_destino" class="form-select form-select-sm">
+                    <option value="">Cargando...</option>
+                  </select>
+                </div>
+
+                <button id="btn-calcular-rutas-evacuacion" class="btn btn-primary w-100 mb-3">
+                  <i class="fa fa-route"></i> Calcular Rutas Mínimas
+                </button>
+
+                <div id="sugerencias-rutas-container" style="max-height: 300px; overflow-y: auto;">
+                  <p class="text-muted small text-center">Selecciona un destino y haz clic en "Calcular"</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Historial de Evacuaciones -->
+          <div class="card p-3 mt-3">
+            <h5>Historial de Evacuaciones</h5>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped" id="tabla-historial-evacuaciones">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Personas Evacuadas</th>
+                    <th>Distancia (km)</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Se llena dinámicamente -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -1155,7 +1249,202 @@
       }
     }
 
+    // ========== FUNCIONES PARA SIMULACIÓN DE EVACUACIÓN ==========
+
+    async function cargarUbicacionesEvacuacion() {
+      try {
+        const res = await fetch(apiBase + '/zonas');
+        const ubicaciones = await res.json();
+
+        // Cargar en selector de origen
+        const selectOrigen = document.getElementById('evac_origen');
+        if (selectOrigen) {
+          selectOrigen.innerHTML = '<option value="">Selecciona ubicación</option>';
+          ubicaciones.forEach(u => {
+            selectOrigen.innerHTML += `<option value="${u.id}" data-personas="${u.personasAfectadas}">${u.nombre} (${u.personasAfectadas} personas)</option>`;
+          });
+        }
+
+        // Cargar en selector de destino
+        const selectDestino = document.getElementById('evac_destino');
+        if (selectDestino) {
+          selectDestino.innerHTML = '<option value="">Selecciona ubicación</option>';
+          ubicaciones.forEach(u => {
+            selectDestino.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
+          });
+        }
+
+        // Cargar en selector de sugerencias
+        const selectSugerencia = document.getElementById('evac_sugerencia_destino');
+        if (selectSugerencia) {
+          selectSugerencia.innerHTML = '<option value="">Selecciona destino</option>';
+          ubicaciones.forEach(u => {
+            selectSugerencia.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
+          });
+        }
+
+      } catch (error) {
+        console.error('Error cargando ubicaciones para evacuación:', error);
+      }
+    }
+
+    // Cuando cambia la ubicación origen, mostrar personas disponibles
+    document.addEventListener('change', (e) => {
+      if (e.target.id === 'evac_origen') {
+        const selected = e.target.options[e.target.selectedIndex];
+        const personas = selected.dataset.personas || 0;
+        document.getElementById('evac_personas_origen').textContent = personas;
+        document.getElementById('evac_max_personas').textContent = personas;
+        document.getElementById('evac_cantidad').max = personas;
+        document.getElementById('evac_cantidad').value = personas; // Valor por defecto
+      }
+    });
+
+    // Calcular rutas sugeridas desde el grafo
+    document.getElementById('btn-calcular-rutas-evacuacion').addEventListener('click', async () => {
+      const destinoId = document.getElementById('evac_sugerencia_destino').value;
+
+      if (!destinoId) {
+        Swal.fire('Error', 'Selecciona un destino para calcular rutas', 'warning');
+        return;
+      }
+
+      try {
+        const res = await fetch(apiBase + `/zonas/caminos/${destinoId}`);
+        const rutas = await res.json();
+
+        const container = document.getElementById('sugerencias-rutas-container');
+        if (!rutas || rutas.length === 0) {
+          container.innerHTML = '<p class="text-muted small text-center">No hay rutas disponibles</p>';
+          return;
+        }
+
+        // Mostrar las rutas sugeridas
+        let html = '<div class="list-group">';
+        rutas.forEach((ruta, idx) => {
+          // CORRECCIÓN AQUÍ: Usar los nombres exactos del DTO CaminoResultante
+          const distanciaTexto = (ruta.distanciaMinima !== undefined && ruta.distanciaMinima !== null) 
+                                  ? ruta.distanciaMinima.toFixed(2) 
+                                  : '?';
+          
+          const pasosConteo = (ruta.caminoUbicaciones) ? ruta.caminoUbicaciones.length : 0;
+
+          html += `
+            <div class="list-group-item p-2">
+              <small><strong>Ruta ${idx + 1}:</strong></small><br>
+              <small>Origen: ${ruta.origen.nombre}</small><br>
+              <small>Destino: ${ruta.destino.nombre}</small><br>
+              <small>Distancia: ${distanciaTexto} km</small><br>
+              <small class="text-muted">Pasos (nodos): ${pasosConteo}</small>
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+      } catch (error) {
+        console.error('Error calculando rutas:', error);
+        Swal.fire('Error', 'No se pudieron calcular las rutas', 'error');
+      }
+    });
+    // Formulario de evacuación manual
+    document.getElementById('form-evacuacion-manual').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const origenId = document.getElementById('evac_origen').value;
+      const destinoId = document.getElementById('evac_destino').value;
+      const cantidad = parseInt(document.getElementById('evac_cantidad').value);
+
+      if (!origenId || !destinoId || !cantidad) {
+        Swal.fire('Error', 'Completa todos los campos', 'warning');
+        return;
+      }
+      
+      if (origenId === destinoId) {
+         Swal.fire('Error', 'El origen y el destino no pueden ser iguales', 'warning');
+         return;
+      }
+
+      try {
+        // === CORRECCIÓN AQUÍ ===
+        const payload = {
+          personasEvacuadas: cantidad,
+          estado: 'EN_PROCESO', // O 'PENDIENTE', debe coincidir con tu Enum EstadoEvacuacion
+          origen: { id: parseInt(origenId) },   // Enviar objeto Ubicacion completo
+          destino: { id: parseInt(destinoId) }  // Enviar objeto Ubicacion completo
+        };
+
+        console.log("Enviando evacuación:", payload);
+
+        const res = await fetch(apiBase + '/evacuacion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || 'Error en la respuesta del servidor');
+        }
+
+        const result = await res.json();
+
+        addLog(`Evacuación iniciada: ${cantidad} personas hacia ${result.destino ? result.destino.nombre : 'destino'}`);
+        
+        // Actualizar historial
+        cargarHistorialEvacuaciones();
+
+        // Limpiar formulario
+        document.getElementById('evac_cantidad').value = '';
+        Swal.fire('Éxito', `Evacuación registrada. Distancia: ${result.distancia ? result.distancia.toFixed(2) : '?'} km`, 'success');
+
+      } catch (error) {
+        console.error('Error ejecutando evacuación:', error);
+        Swal.fire('Error', 'Error al ejecutar la evacuación: ' + error.message, 'error');
+      }
+    });
+
+    async function cargarHistorialEvacuaciones() {
+      try {
+        // Intentar obtener historial desde el backend (si existe endpoint)
+        const res = await fetch(apiBase + '/evacuacion/historial').catch(() => null);
+        if (!res || !res.ok) {
+          // Si no existe endpoint, dejar la tabla vacía o mostrar mensaje
+          const tbody = document.querySelector('#tabla-historial-evacuaciones tbody');
+          if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Historial vacío</td></tr>';
+          return;
+        }
+
+        const historial = await res.json();
+        const tbody = document.querySelector('#tabla-historial-evacuaciones tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        historial.slice(0, 15).forEach((e, idx) => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${idx + 1}</td>
+              <td>${new Date(e.fecha || Date.now()).toLocaleString()}</td>
+              <td>${e.origen?.nombre || 'N/A'}</td>
+              <td>${e.destino?.nombre || 'N/A'}</td>
+              <td>${e.personasEvacuadas || e.cantidad || '-'}</td>
+              <td>${e.distancia?.toFixed(2) || '-'} km</td>
+              <td><span class="badge bg-info">${e.estado || 'PENDIENTE'}</span></td>
+            </tr>
+          `;
+        });
+
+      } catch (error) {
+        console.error('Error cargando historial de evacuaciones:', error);
+      }
+    }
+
     window.addEventListener('load', () => {
+      // Cargar ubicaciones para evacuación
+      cargarUbicacionesEvacuacion();
+      cargarHistorialEvacuaciones();
+
       initInteractiveMap(); // Inicializa el mapa de la pestaña "Mapa"
       loadRecursos();
       loadZonas();

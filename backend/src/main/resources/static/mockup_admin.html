@@ -422,6 +422,11 @@
               </select>
             </div>
 
+            <div class="col-md-4 mt-2">
+              <label class="form-label">Personas en la ubicación</label>
+              <input id="cu_personas" class="form-control form-control-sm" type="number" min="0" placeholder="Ej: 150" />
+            </div>
+
             <div class="col-md-12 mt-2">
               <div id="map-crear-ubicacion"></div>
             </div>
@@ -857,7 +862,7 @@
       lat: document.getElementById("cu_lat").value,
       lng: document.getElementById("cu_lng").value,
       nivelRiesgo: document.getElementById("cu_riesgo").value,
-      personasAfectadas: 0
+      personasAfectadas: parseInt(document.getElementById("cu_personas").value) || 0
     };
 
 
@@ -896,6 +901,14 @@
       addLog('Ubicación creada: ' + (body.nombre || payload.nombre));
       loadUbicaciones();
       loadZonas();
+
+      // Limpiar formulario
+      document.getElementById("cu_nombre").value = '';
+      document.getElementById("cu_tipo").value = 'URBANA';
+      document.getElementById("cu_lat").value = '';
+      document.getElementById("cu_lng").value = '';
+      document.getElementById("cu_riesgo").value = 'BAJO';
+      document.getElementById("cu_personas").value = '';
 
       Swal.fire('Éxito', 'Ubicación creada correctamente.', 'success');
 
