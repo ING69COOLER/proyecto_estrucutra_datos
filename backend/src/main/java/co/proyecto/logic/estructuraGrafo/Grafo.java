@@ -110,6 +110,39 @@ public class Grafo {
         return resultados;
     }
 
+    /**
+     * Encuentra el mejor destino (por distancia mínima) desde un origen
+     * que cumpla con el nivel de riesgo pedido (por ejemplo "BAJO").
+     * Devuelve un CaminoResultante con origen=origen, destino=mejorDestino
+     * o null si no se encontró ninguno.
+     */
+    public CaminoResultante getMejorDestinoDesde(Ubicacion origenUbicacion, String nivelRiesgoDeseado) {
+        int origenIndex = nodos.indexOf(origenUbicacion);
+        if (origenIndex == -1) {
+            throw new IllegalArgumentException("La ubicación de origen " + origenUbicacion.getNombre() + " no está en el grafo.");
+        }
+
+        CaminoResultante mejor = null;
+        double mejorDist = Double.POSITIVE_INFINITY;
+        for (int destinoIndex = 0; destinoIndex < nodos.size(); destinoIndex++) {
+            Ubicacion destino = nodos.get(destinoIndex);
+            if (destino == null) continue;
+            if (nivelRiesgoDeseado != null && !nivelRiesgoDeseado.equals(destino.getNivelRiesgo())) continue;
+            if (destinoIndex == origenIndex) continue;
+            double dist = caminoCortoWarshall[origenIndex][destinoIndex];
+            if (Double.isInfinite(dist)) continue;
+            if (dist < mejorDist) {
+                mejorDist = dist;
+                mejor = new CaminoResultante();
+                mejor.setOrigen(origenUbicacion);
+                mejor.setDestino(destino);
+                mejor.setDistanciaMinima(dist);
+                mejor.setCaminoUbicaciones(reconstruirCaminoUbicaciones(origenIndex, destinoIndex));
+            }
+        }
+        return mejor;
+    }
+
     private List<Ubicacion> reconstruirCaminoUbicaciones(int i, int j) {
         
         List<Ubicacion> path = new LinkedList<>();

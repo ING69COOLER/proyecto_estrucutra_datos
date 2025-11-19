@@ -19,8 +19,8 @@ public interface UbicacionRepository extends JpaRepository<Ubicacion, Integer> {
 
     List<Ubicacion> findByNombre(String nombre);
 
-    @Query("SELECT u FROM Ubicacion u " +
-           "LEFT JOIN FETCH u.recursosNecesarios " + // List
-           "LEFT JOIN FETCH u.recursosDisponibles")  // Set (Ahora funciona)
-    List<Ubicacion> findAllWithRecursos();
+        @Query("SELECT DISTINCT u FROM Ubicacion u " +
+            "LEFT JOIN FETCH u.recursosNecesarios " + // List
+            "LEFT JOIN FETCH u.equipos")  // reemplazado recursosDisponibles por equipos
+        List<Ubicacion> findAllWithRecursos();
 }

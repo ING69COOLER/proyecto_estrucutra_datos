@@ -109,6 +109,8 @@
             <!-- 👇 NUEVO: Panel Rutas visible para OPERADOR -->
             <a href="#" class="list-group-item list-group-item-action" data-tab="panel-rutas">Panel Rutas</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="carga-datos">Carga Inicial</a>
+            <!-- NUEVO: Panel Evacuación -->
+            <a href="#" class="list-group-item list-group-item-action" data-tab="panel-evacuacion">Panel Evacuación</a>
             <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">
               Salir (apagar demo)
             </a>
@@ -264,6 +266,33 @@
           </div>
         </section>
 
+        <!-- NUEVO: PANEL EVACUACIÓN -->
+        <section id="panel-evacuacion" class="tab-section">
+          <div class="card p-3">
+            <h5>Panel de Evacuación</h5>
+            <p class="small-muted">Gestiona el estado de evacuación de las ubicaciones afectadas.</p>
+            <div class="mb-3">
+              <span class="fw-bold">Total personas evacuadas: </span>
+              <span id="evacuacion-total-evacuadas" class="badge bg-success">0</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle" id="tabla-evacuacion">
+                <thead>
+                  <tr>
+                    <th>Zona</th>
+                    <th>Personas Afectadas</th>
+                    <th>Personas Evacuadas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Se rellena dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>
@@ -291,6 +320,171 @@
     const apiBase = document.getElementById('backendUrl').textContent;
     const wsBase = document.getElementById('wsUrl').textContent;
 
+    // =============================
+    // PANEL EVACUACIÓN
+    // =============================
+    // Estado local de evacuados (por zona)
+    let evacuadosPorZona = {};
+
+
+    // Ordenar zonas por nivel de riesgo (CRITICO > ALTO > MEDIO > BAJO)
+    function ordenarZonasPorRiesgo(zonas) {
+      const riesgoValor = { 'CRITICO': 1, 'ALTO': 2, 'MEDIO': 3, 'BAJO': 4 };
+      return zonas.slice().sort((a, b) => {
+        const va = riesgoValor[a.nivelRiesgo] || 99;
+        const vb = riesgoValor[b.nivelRiesgo] || 99;
+        return va - vb;
+      });
+    }
+
+    // Cargar y mostrar la tabla de evacuación ordenada
+    async function loadEvacuacionPanel() {
+      try {
+        const res = await fetch(apiBase + '/zonas');
+        let zonas = await res.json();
+        zonas = ordenarZonasPorRiesgo(zonas);
+        const tbody = document.querySelector('#tabla-evacuacion tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        let totalEvacuadas = 0;
+        zonas.forEach(z => {
+          if (typeof evacuadosPorZona[z.id] !== 'number') {
+            evacuadosPorZona[z.id] = 0;
+          }
+          totalEvacuadas += evacuadosPorZona[z.id];
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${z.nombre} <span class="badge ${getRiskBadgeClass(z.nivelRiesgo)}">${z.nivelRiesgo}</span></td>
+            <td>${z.personasAfectadas}</td>
+            <td>
+              <input type="number" min="0" max="${z.personasAfectadas}" value="${evacuadosPorZona[z.id]}" data-zona-id="${z.id}" class="form-control form-control-sm evacuados-input" style="width:90px;">
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary actualizar-evacuados" data-zona-id="${z.id}">Actualizar</button>
+              <button class="btn btn-sm btn-success evacuar-todos" data-zona-id="${z.id}">Evacuar todos</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+        document.getElementById('evacuacion-total-evacuadas').textContent = totalEvacuadas;
+      } catch (e) {
+        console.error('No se pudo cargar el panel de evacuación', e);
+      }
+    }
+
+    // Buscar mejor zona destino de bajo riesgo conectada usando el grafo
+    // Ahora llamamos al endpoint del backend que sugiere el mejor destino
+    async function sugerirZonaDestino(zonaId) {
+      try {
+        const res = await fetch(apiBase + `/zonas/sugerir-destino/${zonaId}`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        // Si backend devuelve {} (vacío), considerar como nulo
+        if (!data || Object.keys(data).length === 0) return null;
+        // data es un CaminoResultante con 'destino'
+        return data.destino || null;
+      } catch (e) {
+        console.error('Error sugiriendo destino:', e);
+        return null;
+      }
+    }
+
+    // Función para registrar evacuación en backend (con destino)
+    async function registrarEvacuacionBackend(zonaId, personasEvacuadas, destinoReubicacionId) {
+      try {
+        const body = { ubicacionId: parseInt(zonaId), personasEvacuadas: parseInt(personasEvacuadas) };
+        if (destinoReubicacionId) body.destinoReubicacionId = destinoReubicacionId;
+        const res = await fetch(apiBase + '/evacuaciones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const msg = await res.text();
+          Swal.fire('Error', msg || 'No se pudo registrar la evacuación', 'error');
+          return false;
+        }
+        Swal.fire('Éxito', 'Evacuación registrada', 'success');
+        return true;
+      } catch (e) {
+        Swal.fire('Error', 'No se pudo registrar la evacuación', 'error');
+        return false;
+      }
+    }
+
+    // Eventos para actualizar evacuados (con sugerencia de destino)
+    document.addEventListener('click', async function(e) {
+      if (e.target.classList.contains('actualizar-evacuados')) {
+        const zonaId = e.target.getAttribute('data-zona-id');
+        const input = document.querySelector(`input.evacuados-input[data-zona-id="${zonaId}"]`);
+        if (input) {
+          let val = parseInt(input.value, 10);
+          if (isNaN(val) || val < 0) val = 0;
+          const max = parseInt(input.getAttribute('max'), 10);
+          if (val > max) val = max;
+          if (val > 0) {
+            // Sugerir zona destino
+            const destino = await sugerirZonaDestino(zonaId);
+            if (!destino) {
+              Swal.fire('No es posible evacuar', 'No hay ningún camino conectado a una zona de bajo riesgo. No se puede realizar la evacuación.', 'error');
+              return;
+            }
+            let destinoMsg = `Las personas serán reubicadas en: <b>${destino.nombre}</b>`;
+            const confirm = await Swal.fire({
+              title: 'Confirmar evacuación',
+              html: `¿Evacuar <b>${val}</b> personas?<br>${destinoMsg}`,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, evacuar',
+              cancelButtonText: 'Cancelar'
+            });
+            if (confirm.isConfirmed) {
+              const ok = await registrarEvacuacionBackend(zonaId, val, destino.id);
+              if (ok) {
+                evacuadosPorZona[zonaId] = 0;
+                loadEvacuacionPanel();
+              }
+            }
+          } else {
+            Swal.fire('Atención', 'Debe evacuar al menos una persona', 'warning');
+          }
+        }
+      }
+      if (e.target.classList.contains('evacuar-todos')) {
+        const zonaId = e.target.getAttribute('data-zona-id');
+        const input = document.querySelector(`input.evacuados-input[data-zona-id="${zonaId}"]`);
+        if (input) {
+          const max = parseInt(input.getAttribute('max'), 10);
+          if (max > 0) {
+            // Sugerir zona destino
+            const destino = await sugerirZonaDestino(zonaId);
+            if (!destino) {
+              Swal.fire('No es posible evacuar', 'No hay ningún camino conectado a una zona de bajo riesgo. No se puede realizar la evacuación.', 'error');
+              return;
+            }
+            let destinoMsg = `Las personas serán reubicadas en: <b>${destino.nombre}</b>`;
+            const confirm = await Swal.fire({
+              title: 'Confirmar evacuación',
+              html: `¿Evacuar <b>${max}</b> personas?<br>${destinoMsg}`,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, evacuar',
+              cancelButtonText: 'Cancelar'
+            });
+            if (confirm.isConfirmed) {
+              const ok = await registrarEvacuacionBackend(zonaId, max, destino.id);
+              if (ok) {
+                evacuadosPorZona[zonaId] = 0;
+                loadEvacuacionPanel();
+              }
+            }
+          } else {
+            Swal.fire('Atención', 'No hay personas para evacuar', 'warning');
+          }
+        }
+      }
+    });
+
     // --- Variables Globales para el Mapa de Rutas ---
     let crMap = null; // El objeto mapa
     let crRouteControls = []; // Para guardar las rutas (polylines)
@@ -314,6 +508,10 @@
         document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
         document.getElementById(tab).classList.add('active');
 
+        // Si es el panel de evacuación, cargar datos
+        if (tab === 'panel-evacuacion') {
+          loadEvacuacionPanel();
+        }
         if (tab === 'panel-rutas' && !crMapInitialized) {
           console.log("▶️ Detectado clic en 'Panel Rutas', iniciando mapa...");
           initCrearRutaMap();

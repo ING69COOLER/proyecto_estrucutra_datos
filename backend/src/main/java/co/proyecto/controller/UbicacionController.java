@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import jakarta.servlet.http.HttpSession;
+import co.proyecto.model.Usuario;
+import co.proyecto.model.enums.Rol;
 
 
 @RestController
@@ -80,6 +83,7 @@ public class UbicacionController {
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public ResponseEntity<?> getUbicacionById(@PathVariable int id) {
         try {
             return ubicacionRepository.findById(id)
@@ -88,6 +92,27 @@ public class UbicacionController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUbicacion(@PathVariable int id, HttpSession session) {
+        try {
+            Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+            if (usuario == null) return ResponseEntity.status(401).body("No autenticado");
+            if (usuario.getRol() != Rol.ADMINISTRADOR) return ResponseEntity.status(403).body("Acceso denegado");
+
+            return ubicacionRepository.findById(id).map(u -> {
+                try {
+                    ubicacionRepository.delete(u);
+                    return ResponseEntity.ok().body("Ubicacion eliminada");
+                } catch (Exception ex) {
+                    return ResponseEntity.status(500).body("Error al eliminar: " + ex.getMessage());
+                }
+            }).orElse(ResponseEntity.status(404).body("Ubicacion no encontrada"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
 
@@ -121,6 +146,24 @@ public class UbicacionController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Error al calcular caminos: " + e.getMessage());
+        }
+    }
+
+    // Nuevo endpoint: sugerir el mejor destino de bajo riesgo desde un origen
+    @GetMapping("/sugerir-destino/{origenId}")
+    public ResponseEntity<?> sugerirDestino(@PathVariable int origenId, @RequestParam(required = false) String nivel) {
+        try {
+            return ubicacionRepository.findById(origenId)
+                    .map(origen -> {
+                        String nivelBuscado = (nivel == null) ? "BAJO" : nivel;
+                        co.proyecto.dto.CaminoResultante mejor = grafo.getMejorDestinoDesde(origen, nivelBuscado);
+                        if (mejor == null) return ResponseEntity.ok().body(Collections.emptyMap());
+                        return ResponseEntity.ok(mejor);
+                    })
+                    .orElseGet(() -> ResponseEntity.status(404).body("Origen no encontrado"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Error al sugerir destino: " + e.getMessage());
         }
     }
 }

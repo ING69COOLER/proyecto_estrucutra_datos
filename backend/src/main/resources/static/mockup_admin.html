@@ -97,6 +97,7 @@
             <a href="#" class="list-group-item list-group-item-action" data-tab="panel-admin">Panel Administración</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="crear-ubicacion">Crear Ubicación</a>
             <a href="#" class="list-group-item list-group-item-action" data-tab="crear-ruta">Crear Ruta</a>
+            <a href="#" class="list-group-item list-group-item-action" data-tab="panel-reportes">Reportes</a>
             
             <a href="#" class="list-group-item list-group-item-action text-danger" id="menu-exit">
               Salir (apagar demo)
@@ -127,7 +128,7 @@
                   </div>
                   <div class="col-sm-4">
                     <div class="card p-2">
-                      <h6>Personas evacuadas</h6>
+                      <h6>Personas afectadas</h6>
                       <p id="totalEvacuated" class="display-6 m-0">0</p>
                     </div>
                   </div>
@@ -216,12 +217,6 @@
                     <label class="form-label">Cantidad</label>
                     <input id="r_cantidad" type="number" class="form-control form-control-sm" value="1" />
                   </div>
-                  <div class="mb-2">
-                    <label class="form-label">Ubicación de Destino</label>
-                    <select required id="r_ubicacion_select" class="form-select form-select-sm">
-                      <option value="">Cargando ubicaciones...</option>
-                    </select>
-                  </div>
                   <div class="d-grid">
                     <button class="btn btn-success btn-sm" type="submit">Crear Recurso</button>
                   </div>
@@ -252,6 +247,23 @@
                     <button class="btn btn-primary btn-sm" id="btn-create-team" type="button">Crear Equipo</button>
                   </div>
                 </form>
+                
+                <hr>
+
+                <h6 class="mt-3">Listado de Equipos</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm" id="tabla-equipos">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Miembros</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -279,17 +291,23 @@
                 <input id="u_lng" type="number" step="0.0001" class="form-control form-control-sm" placeholder="-74.05" />
               </div>
               <div class="col-md-4">
-                <label class="form-label">Nivel de Riesgo</label>
-                <select id="u_nivelRiesgo" class="form-select form-select-sm">
-                  <option value="BAJO">Bajo</option>
-                  <option value="MEDIO">Medio</option>
-                  <option value="ALTO">Alto</option>
-                  <option value="CRITICO">Crítico</option>
-                </select>
-              </div>
-              <div class="col-12 d-grid">
-                <button class="btn btn-success btn-sm mt-2" type="submit">Crear Ubicación</button>
-              </div>
+                          <label class="form-label">Nivel de Riesgo</label>
+                          <select id="u_nivelRiesgo" class="form-select form-select-sm">
+                            <option value="BAJO">Bajo</option>
+                            <option value="MEDIO">Medio</option>
+                            <option value="ALTO">Alto</option>
+                            <option value="CRITICO">Crítico</option>
+                          </select>
+                        </div>
+
+                        <div class="col-md-4">
+                          <label class="form-label">Personas afectadas</label>
+                          <input id="u_personasAfectadas" type="number" min="0" value="0" class="form-control form-control-sm" />
+                        </div>
+
+                        <div class="col-12 d-grid">
+                          <button class="btn btn-success btn-sm mt-2" type="submit">Crear Ubicación</button>
+                        </div>
             </form>
 
             <hr>
@@ -298,13 +316,12 @@
             <div class="table-responsive">
               <table class="table table-sm" id="tabla-recursos">
                 <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Tipo</th>
-                    <th>Cantidad</th>
-                    <th>Disponibilidad</th>
-                    <th>Acciones</th>
-                  </tr>
+                          <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Disponibilidad</th>
+                          </tr>
                 </thead>
                 <tbody></tbody>
               </table>
@@ -320,6 +337,7 @@
                     <th>Longitud</th>
                     <th>Latitud</th>
                     <th>Nivel de Riesgo</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -368,6 +386,11 @@
       </select>
     </div>
 
+    <div class="col-md-4 mt-2">
+      <label class="form-label">Personas afectadas</label>
+      <input id="cu_personasAfectadas" type="number" min="0" value="0" class="form-control form-control-sm" />
+    </div>
+
     <div class="col-md-12 mt-2">
       <div id="map-crear-ubicacion"></div>
     </div>
@@ -401,6 +424,86 @@
   </div>
 
 </section>
+
+        <section id="panel-reportes" class="tab-section">
+          <div class="card p-3">
+            <h5>Panel de Reportes</h5>
+            <p class="small-muted">Resumen de datos globales del sistema.</p>
+            <div id="reporte-datos" class="row g-3">
+              <div class="col-md-4">
+                <div class="card p-2 mb-2">
+                  <h6>Total de Zonas</h6>
+                  <p id="rep_totalZonas" class="display-6 m-0">-</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-2 mb-2">
+                  <h6>Personas Afectadas</h6>
+                  <p id="rep_personasAfectadas" class="display-6 m-0">-</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-2 mb-2">
+                  <h6>Total Recursos</h6>
+                  <p id="rep_totalRecursos" class="display-6 m-0">-</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-2 mb-2">
+                  <h6>Recursos Asignados</h6>
+                  <p id="rep_recursosAsignados" class="display-6 m-0">-</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-2 mb-2">
+                  <h6>Recursos Disponibles</h6>
+                  <p id="rep_recursosDisponibles" class="display-6 m-0">-</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-2 mb-2">
+                  <h6>Equipos Totales</h6>
+                  <p id="rep_equiposTotales" class="display-6 m-0">-</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-2 mb-2">
+                  <h6>Equipos en Misión</h6>
+                  <p id="rep_equiposEnMision" class="display-6 m-0">-</p>
+                </div>
+              </div>
+            </div>
+            <hr>
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Zonas por Tipo</h6>
+                <ul id="rep_zonasPorTipo" class="list-group"></ul>
+              </div>
+              <div class="col-md-6">
+                <h6>Zonas por Nivel de Riesgo</h6>
+                <ul id="rep_zonasPorNivel" class="list-group"></ul>
+              </div>
+            </div>
+            <hr>
+            <div class="row">
+              <div class="col-12">
+                <h6>Historial de Evacuaciones</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered" id="tabla-evacuaciones">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Zona</th>
+                        <th>Personas Evacuadas</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
 
         </main>
@@ -475,6 +578,64 @@
     // ───────────────────────────────────────────
     //  INICIALIZAR MAPA SOLO EN ESTA PESTAÑA
     // ───────────────────────────────────────────
+
+      // Cargar reporte si es la pestaña de reportes
+      if (tab === "panel-reportes") {
+        cargarPanelReportes();
+      }
+          // Panel de Reportes: cargar datos
+          async function cargarPanelReportes() {
+            try {
+              const res = await fetch(apiBase + '/admin/report/zonas', { credentials: 'include' });
+              if (!res.ok) {
+                document.getElementById('reporte-datos').innerHTML = '<div class="alert alert-danger">No autorizado o error al cargar reporte.</div>';
+                return;
+              }
+              const data = await res.json();
+              document.getElementById('rep_totalZonas').textContent = data.totalZonas;
+              document.getElementById('rep_personasAfectadas').textContent = data.personasAfectadasTotal;
+              document.getElementById('rep_totalRecursos').textContent = data.totalRecursos;
+              document.getElementById('rep_recursosAsignados').textContent = data.recursosAsignados;
+              document.getElementById('rep_recursosDisponibles').textContent = data.recursosDisponibles;
+              document.getElementById('rep_equiposTotales').textContent = data.equiposTotales;
+              document.getElementById('rep_equiposEnMision').textContent = data.equiposEnMision;
+
+              // Zonas por tipo
+              const ulTipo = document.getElementById('rep_zonasPorTipo');
+              ulTipo.innerHTML = '';
+              for (const [tipo, cant] of Object.entries(data.zonasPorTipo || {})) {
+                ulTipo.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${tipo}<span class="badge bg-primary rounded-pill">${cant}</span></li>`;
+              }
+
+              // Zonas por nivel de riesgo
+              const ulNivel = document.getElementById('rep_zonasPorNivel');
+              ulNivel.innerHTML = '';
+              for (const [nivel, cant] of Object.entries(data.zonasPorNivelRiesgo || {})) {
+                ulNivel.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${nivel}<span class="badge bg-secondary rounded-pill">${cant}</span></li>`;
+              }
+
+              // Historial de evacuaciones
+              const evacTable = document.querySelector('#tabla-evacuaciones tbody');
+              evacTable.innerHTML = '<tr><td colspan="3">Cargando...</td></tr>';
+              fetch(apiBase + '/evacuaciones')
+                .then(r => r.json())
+                .then(evacs => {
+                  evacTable.innerHTML = '';
+                  if (!Array.isArray(evacs) || evacs.length === 0) {
+                    evacTable.innerHTML = '<tr><td colspan="3">Sin registros</td></tr>';
+                  } else {
+                    evacs.forEach(ev => {
+                      const fecha = ev.ubicacion && ev.ubicacion.updatedAt ? new Date(ev.ubicacion.updatedAt).toLocaleString() : '-';
+                      const zona = ev.ubicacion && ev.ubicacion.nombre ? ev.ubicacion.nombre : '-';
+                      evacTable.innerHTML += `<tr><td>${fecha}</td><td>${zona}</td><td>${ev.personasEvacuadas}</td></tr>`;
+                    });
+                  }
+                })
+                .catch(() => { evacTable.innerHTML = '<tr><td colspan="3">Error al cargar evacuaciones</td></tr>'; });
+            } catch (err) {
+              document.getElementById('reporte-datos').innerHTML = '<div class="alert alert-danger">Error al cargar reporte.</div>';
+            }
+          }
       
       if (tab === "panel-admin") {
         populateLocationDropdown(); 
@@ -537,13 +698,14 @@
   // ----- GUARDAR UBICACIÓN -----
   document.getElementById("cu_guardar").addEventListener("click", async () => {
 
+    const personas = parseInt(document.getElementById("cu_personasAfectadas").value, 10);
     const payload = {
       nombre: document.getElementById("cu_nombre").value,
       tipo: document.getElementById("cu_tipo").value,
       lat: document.getElementById("cu_lat").value,
       lng: document.getElementById("cu_lng").value,
       nivelRiesgo: document.getElementById("cu_riesgo").value,
-      personasAfectadas: 0
+      personasAfectadas: Number.isFinite(personas) && personas >= 0 ? personas : 0
     };
 
 
@@ -825,20 +987,11 @@ document.getElementById('form-create-resource').addEventListener('submit', (e) =
   const tipo = document.getElementById('r_tipo').value;
   const cantidad = +document.getElementById('r_cantidad').value;
   
-  // ✅ CAMBIO CLAVE: Leer el ID directamente del valor seleccionado
-  const ubicacionId = document.getElementById('r_ubicacion_select').value; 
-
-  if (!ubicacionId) {
-    Swal.fire('Error', 'Debe seleccionar una ubicación de destino.', 'warning');
-    return;
-  }
-  
-  // ✅ PAYLOAD CORREGIDO: Usamos el ID del selector
+  // Ahora los recursos se crean sin asignar ubicación (se asignan desde la vista de Ubicación)
   const payload = { 
     nombre, 
     tipo, 
-    cantidad, 
-    ubicacion: { id: +ubicacionId } // Convertir el string del selector a número
+    cantidad
   };
 
   fetch(apiBase + '/recursos', {
@@ -853,9 +1006,9 @@ document.getElementById('form-create-resource').addEventListener('submit', (e) =
       return r.json();
     })
     .then(data => {
-      addLog('Recurso creado: ' + data.nombre + ' en Ubi ID: ' + ubicacionId);
+      addLog('Recurso creado: ' + data.nombre);
       loadRecursos(); // Refresca la tabla de recursos
-      Swal.fire('Éxito', 'Recurso creado y asignado.', 'success');
+      Swal.fire('Éxito', 'Recurso creado correctamente.', 'success');
     })
     .catch(err => { 
       console.error(err); 
@@ -892,17 +1045,72 @@ async function populateLocationDropdown() {
     }
 }
 
+// -----------------------------
+// Crear equipo de rescate (Admin)
+// -----------------------------
+document.getElementById('btn-create-team').addEventListener('click', async (e) => {
+  e.preventDefault();
+
+  const tipo = document.getElementById('e_tipo').value;
+  const miembros = parseInt(document.getElementById('e_miembros').value, 10) || 0;
+
+  if (!tipo) {
+    Swal.fire('Error', 'Selecciona un tipo de equipo.', 'warning');
+    return;
+  }
+
+  if (miembros <= 0) {
+    Swal.fire('Error', 'El número de miembros debe ser mayor a 0.', 'warning');
+    return;
+  }
+
+  const payload = {
+    tipo: tipo,
+    miembros: miembros,
+    estado: 'DISPONIBLE'
+  };
+
+  try {
+    const res = await fetch(apiBase + '/admin/equipos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await res.text();
+    let body = null;
+    try { body = JSON.parse(text); } catch (_) { body = { message: text }; }
+
+    if (!res.ok) {
+      Swal.fire('Error', body.message || 'No se pudo crear el equipo', 'error');
+      return;
+    }
+
+    addLog('Equipo creado: ' + (body.tipo || tipo) + ' (miembros: ' + miembros + ')');
+    Swal.fire('Éxito', 'Equipo de rescate creado correctamente.', 'success');
+
+    // Limpia el formulario
+    document.getElementById('e_miembros').value = '5';
+    // Refrescar lista de equipos
+    try { loadEquipos(); } catch (e) { /* ignore */ }
+  } catch (err) {
+    console.error('Error creando equipo:', err);
+    Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+  }
+});
+
     // Crear ubicación
     document.getElementById("form-create-ubicacion").addEventListener("submit", async (event) => {
       event.preventDefault();
 
+      const personasVal = parseInt(document.getElementById("u_personasAfectadas").value, 10);
       const ubicacion = {
         nombre: document.getElementById("u_nombre").value,
         tipo: document.getElementById("u_tipo").value,
         lat: parseFloat(document.getElementById("u_lat").value),
         lng: parseFloat(document.getElementById("u_lng").value),
         nivelRiesgo: document.getElementById("u_nivelRiesgo").value,
-        personasAfectadas: 0
+        personasAfectadas: Number.isFinite(personasVal) && personasVal >= 0 ? personasVal : 0
       };
 
       console.log('Enviando ubicación:', ubicacion);
@@ -949,9 +1157,40 @@ async function populateLocationDropdown() {
                 <td>${u.lng}</td>
                 <td>${u.lat}</td>
                 <td>${u.nivelRiesgo}</td>
+                <td><button class="btn btn-sm btn-outline-danger btn-delete-ubicacion" data-id="${u.id}">Eliminar</button></td>
               </tr>
             `;
           });
+
+          // Attach delete handlers
+          document.querySelectorAll('.btn-delete-ubicacion').forEach(b => b.addEventListener('click', async (ev) => {
+            const id = b.dataset.id;
+            const result = await Swal.fire({
+              title: 'Confirmar',
+              text: '¿Eliminar esta ubicación? Esta acción no se puede deshacer.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Eliminar',
+              cancelButtonText: 'Cancelar'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+              const res = await fetch(apiBase + '/zonas/' + id, { method: 'DELETE' });
+              const text = await res.text();
+              if (res.status === 401) { Swal.fire('No autenticado', 'Debes iniciar sesión como administrador.', 'error'); return; }
+              if (res.status === 403) { Swal.fire('Acceso denegado', 'No tienes permisos para eliminar.', 'error'); return; }
+              if (!res.ok) { Swal.fire('Error', text || 'No se pudo eliminar la ubicación', 'error'); return; }
+
+              Swal.fire('Eliminado', 'Ubicación eliminada correctamente.', 'success');
+              loadUbicaciones();
+              loadZonas();
+            } catch (err) {
+              console.error('Error eliminando ubicacion', err);
+              Swal.fire('Error', 'No se pudo eliminar la ubicación', 'error');
+            }
+          }));
         })
         .catch(e => console.error('Error cargando ubicaciones:', e));
     }
@@ -967,21 +1206,49 @@ async function populateLocationDropdown() {
         .then(list => {
           const tbody = document.querySelector('#tabla-recursos tbody');
           tbody.innerHTML = '';
-          let total = 0;
+          let totalDisponibles = 0;
           list.forEach(r => {
-            total += r.cantidad || 0;
+            if (r.disponible) {
+              totalDisponibles += r.cantidad || 0;
+            }
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>${r.nombre}</td>
               <td>${r.tipo}</td>
               <td>${r.cantidad}</td>
-              <td>${r.disponible ? 'Sí' : 'No'}</td>
-              <td><button class="btn btn-sm btn-outline-primary" data-id="${r.id}">Asignar</button></td>`;
+              <td>${r.disponible ? 'Sí' : 'No'}</td>`;
             tbody.appendChild(tr);
           });
-          document.getElementById('totalResources').textContent = total;
+          document.getElementById('totalResources').textContent = totalDisponibles;
         })
         .catch(e => console.warn('No se pudo cargar recursos', e));
+    }
+
+    // Cargar equipos de rescate
+    function loadEquipos() {
+      fetch(apiBase + '/admin/equipos')
+        .then(r => {
+          if (!r.ok) throw new Error('No autorizado o error al cargar equipos');
+          return r.json();
+        })
+        .then(list => {
+          const tbody = document.querySelector('#tabla-equipos tbody');
+          if (!tbody) return;
+          tbody.innerHTML = '';
+          list.forEach(e => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${e.idEquipo || ''}</td>
+              <td>${e.tipo || ''}</td>
+              <td>${e.miembros || 0}</td>
+              <td>${e.estado || ''}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => {
+          console.warn('No se pudieron cargar equipos:', err);
+        });
     }
 
     // Click en "Ver" zona tabla
@@ -996,9 +1263,8 @@ async function populateLocationDropdown() {
     });
 
     function mostrarUbicacion(ubicacion) {
-      Swal.fire({
-        title: 'Ubicación encontrada',
-        html: `
+      const html = `
+        <div>
           <b>ID:</b> ${ubicacion.id}<br>
           <b>Nombre:</b> ${ubicacion.nombre}<br>
           <b>Latitud:</b> ${ubicacion.lat}<br>
@@ -1006,9 +1272,181 @@ async function populateLocationDropdown() {
           <b>Nivel de riesgo:</b> ${ubicacion.nivelRiesgo}<br>
           <b>Personas afectadas:</b> ${ubicacion.personasAfectadas}<br>
           <b>Última actualización:</b> ${ubicacion.updatedAt}<br>
-        `,
-        icon: 'success',
-        confirmButtonText: 'OK'
+        </div>
+
+        <hr>
+
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Recursos asignados</h6>
+            <ul id="assignedRecursos" class="list-group mb-2"></ul>
+            <h6>Recursos disponibles</h6>
+            <ul id="availableRecursos" class="list-group"></ul>
+          </div>
+          <div class="col-md-6">
+            <h6>Equipos asignados</h6>
+            <ul id="assignedEquipos" class="list-group mb-2"></ul>
+            <h6>Equipos disponibles</h6>
+            <ul id="availableEquipos" class="list-group"></ul>
+          </div>
+        </div>
+      `;
+
+      Swal.fire({
+        title: 'Ubicación encontrada',
+        html: html,
+        width: 900,
+        showCloseButton: true,
+        focusConfirm: false,
+        didOpen: async () => {
+          // Populate assigned lists from the `ubicacion` object
+          const assignedRecursos = document.getElementById('assignedRecursos');
+          const assignedEquipos = document.getElementById('assignedEquipos');
+
+          assignedRecursos.innerHTML = '';
+          (ubicacion.recursosNecesarios || []).forEach(r => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `<span>${r.nombre} (${r.tipo}) x${r.cantidad}</span>
+                            <button class="btn btn-sm btn-outline-danger btn-desasignar-recurso" data-id="${r.id}">Desasignar</button>`;
+            assignedRecursos.appendChild(li);
+          });
+
+          assignedEquipos.innerHTML = '';
+          (ubicacion.equipos || []).forEach(e => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `<span>${e.tipo} (miembros: ${e.miembros}) - ${e.estado || ''}</span>
+                            <button class="btn btn-sm btn-outline-danger btn-desasignar-equipo" data-id="${e.idEquipo}">Desasignar</button>`;
+            assignedEquipos.appendChild(li);
+          });
+
+          // Load all resources and show those not assigned
+          try {
+            const allRecursos = await fetch(apiBase + '/recursos').then(r => r.json());
+            const assignedIds = new Set((ubicacion.recursosNecesarios || []).map(x => x.id));
+            const availableRecursos = document.getElementById('availableRecursos');
+            availableRecursos.innerHTML = '';
+            allRecursos.forEach(r => {
+              if (!assignedIds.has(r.id)) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `<span>${r.nombre} (${r.tipo}) x${r.cantidad}</span>
+                                <button class="btn btn-sm btn-outline-primary btn-asignar-recurso" data-id="${r.id}">Asignar</button>`;
+                availableRecursos.appendChild(li);
+              }
+            });
+          } catch (err) {
+            console.warn('Error cargando recursos disponibles', err);
+          }
+
+          // Load all equipos and show those not assigned
+          try {
+            const allEquipos = await fetch(apiBase + '/admin/equipos').then(r => r.ok ? r.json() : []);
+            const assignedEquipoIds = new Set((ubicacion.equipos || []).map(x => x.idEquipo));
+            const availableEquipos = document.getElementById('availableEquipos');
+            availableEquipos.innerHTML = '';
+            allEquipos.forEach(e => {
+              if (!assignedEquipoIds.has(e.idEquipo)) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `<span>${e.tipo} (miembros: ${e.miembros})</span>
+                                <button class="btn btn-sm btn-outline-primary btn-asignar-equipo" data-id="${e.idEquipo}">Asignar</button>`;
+                availableEquipos.appendChild(li);
+              }
+            });
+          } catch (err) {
+            console.warn('Error cargando equipos disponibles', err);
+          }
+
+          // Attach handlers (delegation would be cleaner, but we attach directly)
+          document.querySelectorAll('.btn-asignar-recurso').forEach(b => b.addEventListener('click', async (ev) => {
+            const id = b.dataset.id;
+            try {
+              const resp = await fetch(apiBase + `/recursos/${id}/asignar`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ubicacionId: ubicacion.id })
+              });
+
+              if (resp.status === 409) {
+                const text = await resp.text();
+                let body = null;
+                try { body = JSON.parse(text); } catch (_) { body = { message: text }; }
+                Swal.fire('Conflicto', body.message || 'Recurso ya asignado a otra ubicación.', 'warning');
+                return;
+              }
+
+              if (!resp.ok) {
+                const text = await resp.text();
+                Swal.fire('Error', text || 'No se pudo asignar recurso', 'error');
+                return;
+              }
+
+              // refresh view
+              const res = await fetch(apiBase + '/zonas/' + ubicacion.id);
+              const fresh = await res.json();
+              Swal.close();
+              mostrarUbicacion(fresh);
+              loadRecursos();
+            } catch (err) { console.error(err); Swal.fire('Error','No se pudo asignar recurso','error'); }
+          }));
+
+          document.querySelectorAll('.btn-desasignar-recurso').forEach(b => b.addEventListener('click', async (ev) => {
+            const id = b.dataset.id;
+            try {
+              await fetch(apiBase + `/recursos/${id}/desasignar`, { method: 'PUT' });
+              const res = await fetch(apiBase + '/zonas/' + ubicacion.id);
+              const fresh = await res.json();
+              Swal.close();
+              mostrarUbicacion(fresh);
+              loadRecursos();
+            } catch (err) { console.error(err); Swal.fire('Error','No se pudo desasignar recurso','error'); }
+          }));
+
+          document.querySelectorAll('.btn-asignar-equipo').forEach(b => b.addEventListener('click', async (ev) => {
+            const id = b.dataset.id;
+            try {
+              const resp = await fetch(apiBase + `/admin/equipos/${id}/ubicacion`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ubicacionId: ubicacion.id })
+              });
+
+              if (resp.status === 409) {
+                const text = await resp.text();
+                let body = null;
+                try { body = JSON.parse(text); } catch (_) { body = { message: text }; }
+                Swal.fire('Conflicto', body.message || 'Equipo ya asignado a otra ubicación.', 'warning');
+                return;
+              }
+
+              if (!resp.ok) {
+                const text = await resp.text();
+                Swal.fire('Error', text || 'No se pudo asignar equipo', 'error');
+                return;
+              }
+
+              const res = await fetch(apiBase + '/zonas/' + ubicacion.id);
+              const fresh = await res.json();
+              Swal.close();
+              mostrarUbicacion(fresh);
+              loadEquipos();
+            } catch (err) { console.error(err); Swal.fire('Error','No se pudo asignar equipo','error'); }
+          }));
+
+          document.querySelectorAll('.btn-desasignar-equipo').forEach(b => b.addEventListener('click', async (ev) => {
+            const id = b.dataset.id;
+            try {
+              await fetch(apiBase + `/admin/equipos/${id}/desasignar`, { method: 'PUT' });
+              const res = await fetch(apiBase + '/zonas/' + ubicacion.id);
+              const fresh = await res.json();
+              Swal.close();
+              mostrarUbicacion(fresh);
+              loadEquipos();
+            } catch (err) { console.error(err); Swal.fire('Error','No se pudo desasignar equipo','error'); }
+          }));
+        }
       });
     }
 
@@ -1022,11 +1460,11 @@ async function populateLocationDropdown() {
           // zonasLayer.clearLayers(); // <-- JS DE MAPA ELIMINADO
 
           let countCritical = 0;
-          let totalEvacuated = 0;
+          let totalAfectadas = 0;
 
           list.forEach(z => {
             if (z.nivelRiesgo === 'CRITICO') countCritical++;
-            totalEvacuated += z.personasAfectadas || 0;
+            totalAfectadas += z.personasAfectadas || 0;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -1050,7 +1488,7 @@ async function populateLocationDropdown() {
           });
 
           document.getElementById('countCritical').textContent = countCritical;
-          document.getElementById('totalEvacuated').textContent = totalEvacuated;
+          document.getElementById('totalEvacuated').textContent = totalAfectadas;
         })
         .catch(e => console.warn('No se pudo cargar zonas', e));
     }
@@ -1085,6 +1523,7 @@ async function populateLocationDropdown() {
       loadRecursos();
       loadZonas();
       cargarUsuarioActual();
+      loadEquipos();
 
       // <-- LÓGICA DE 'btn-load-sample' ELIMINADA -->
 

@@ -15,9 +15,22 @@ public class Evacuacion {
     @Enumerated(EnumType.STRING)
     private EstadoEvacuacion estado;
 
+
     @ManyToOne
     @JoinColumn(name = "ubicacion_id")
     private Ubicacion ubicacion;
+
+    // Nueva: zona destino de reubicación
+    @ManyToOne
+    @JoinColumn(name = "destino_reubicacion_id")
+    private Ubicacion destinoReubicacion;
+    public Ubicacion getDestinoReubicacion() {
+        return destinoReubicacion;
+    }
+
+    public void setDestinoReubicacion(Ubicacion destinoReubicacion) {
+        this.destinoReubicacion = destinoReubicacion;
+    }
 
     // Constructor vacío
     public Evacuacion() {}

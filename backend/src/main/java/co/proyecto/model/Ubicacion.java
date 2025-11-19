@@ -2,14 +2,12 @@ package co.proyecto.model;
 
 import jakarta.persistence.*;
 import java.util.List;
-
-import org.hibernate.internal.util.compare.ComparableComparator;
-// 👇 IMPORTS AÑADIDOS
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import java.util.Objects;
 import java.util.Set;
+
+// 👇 IMPORTS AÑADIDOS
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Objects;
+// import java.util.Set; (no usado)
 import java.util.Date;
 
 
@@ -39,12 +37,13 @@ public class Ubicacion implements Comparable<Ubicacion> {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    // Cambia ListaDobleSimple por List<Recurso>
+    // Lista de recursos asociados a esta ubicación (uno a muchos)
     @OneToMany(mappedBy = "ubicacion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recurso> recursosNecesarios;
 
+    // Equipos asignados a esta ubicación
     @OneToMany(mappedBy = "ubicacion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Recurso> recursosDisponibles;
+    private Set<co.proyecto.model.EquipoRescate> equipos;
     
 
     @JsonIgnore
@@ -149,12 +148,12 @@ public class Ubicacion implements Comparable<Ubicacion> {
         this.recursosNecesarios = recursosNecesarios;
     }
 
-    public Set<Recurso> getRecursosDisponibles() {
-        return recursosDisponibles;
+    public Set<co.proyecto.model.EquipoRescate> getEquipos() {
+        return equipos;
     }
 
-    public void setRecursosDisponibles(Set<Recurso> recursosDisponibles) {
-        this.recursosDisponibles = recursosDisponibles;
+    public void setEquipos(Set<co.proyecto.model.EquipoRescate> equipos) {
+        this.equipos = equipos;
     }
 
     public List<Ruta> getRutasOrigen() {

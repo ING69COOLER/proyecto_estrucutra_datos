@@ -1,5 +1,6 @@
 package co.proyecto.model;
 import co.proyecto.model.enums.EstadoEquipo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,6 +14,11 @@ public class EquipoRescate {
 
     @Enumerated(EnumType.STRING)
     private EstadoEquipo estado;
+
+    @ManyToOne
+    @JoinColumn(name = "ubicacion_id")
+    @JsonIgnore
+    private Ubicacion ubicacion;
 
     public int getIdEquipo() {
         return idEquipo;
@@ -45,6 +51,14 @@ public class EquipoRescate {
 
     public void setEstado(EstadoEquipo estado) {
         this.estado = estado;
+    }
+
+    public Ubicacion getUbicacion() {
+        return ubicacion;
+    }
+
+    public void setUbicacion(Ubicacion ubicacion) {
+        this.ubicacion = ubicacion;
     }
 
    
